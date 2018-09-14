@@ -1,0 +1,7 @@
+--require ./test/babelHook
+--require ./test/setGlobal
+--require ./test/enzymeHook
+--require jsdom-global/register
+--reporter progress
+--recursive
+./test/**/*.integration.js

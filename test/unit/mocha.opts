@@ -1,0 +1,5 @@
+--require esm
+--require ./test/setGlobal
+--reporter progress
+--recursive
+./test/**/*.unit.js

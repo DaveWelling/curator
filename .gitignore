@@ -105,3 +105,5 @@ typings/
 .nyc_output
 
 .DS_Store
+
+errorShots

@@ -1,18 +1,14 @@
-import './index.css'
+import './index.css';
 
-import React from 'react'
-import {render} from 'react-dom'
+import React from 'react';
+import {render} from 'react-dom';
 import { Provider } from 'react-redux';
-import App from './App'
-import store, {persistor} from './store';
-import { PersistGate } from 'redux-persist/integration/react'
-import Loading from './components/Loading';
+import App from './components/App';
+import store from './store';
 
 render(
     (<Provider store={store}>
-        <PersistGate loading={Loading()} persistor={persistor}>
-            <App/>
-        </PersistGate>
+        <App/>
     </Provider>),
     document.querySelector('#app')
 );
@@ -20,3 +16,10 @@ render(
 if (global.window) {
     window.ResizeObserver = window.ResizeObserver || require('resize-observer-polyfill');
 }
+
+if ('serviceWorker' in navigator) {
+    // Use the window load event to keep the page load performant
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js');
+    });
+  }
