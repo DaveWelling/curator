@@ -3,7 +3,7 @@ import * as repository from '../../../src/repository/projectConfigRepository';
 import cuid from 'cuid';
 
 describe('projectConfigRepository', () => {
-    afterEach((done) => {
+    beforeEach((done) => {
         repository.destroy().then(()=>done()).catch(done);
     });
     describe('loadProjectConfig', () => {

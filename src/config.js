@@ -1,6 +1,6 @@
 const config = {
     defaultModelType: 'event',
-    dataTypes:[
+    modelTypes:[
         {title:'chapter', prettyName:'Chapter', view: 'FullTextView'},
         {title:'event', prettyName:'Event', view: 'EventView'},
         {title:'summary', prettyName: 'Summary', view: 'FullTextView'},

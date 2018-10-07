@@ -1,0 +1,105 @@
+/* the tree node's style */
+.tree-view {
+    overflow-y: hidden;
+}
+
+/* style for the children nodes container */
+.tree-view_children {
+    margin-left: 16px;
+}
+
+.tree-view-item {
+    cursor: pointer;
+    text-align: left;
+}
+.tree-view-item-top {
+    display: flex;
+    margin: 0 .25em;
+}
+.tree-view-text {
+    flex-grow: 1;
+    display:flex;
+    flex-direction: row;
+}
+
+
+.tree-view_children-collapsed {
+    height: 0;
+}
+
+
+.tree-view_arrow {
+    color: black;
+    /* width: 1.5em;
+    height: 1.5em;
+    cursor: pointer;
+    display: inline-block;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    font-size: x-large;
+    padding: 0 .1em;
+    line-height: 1em; */
+}
+/* .tree-view_arrow:after {
+    font-size: x-large;
+    content: '▾';
+    padding: 0 .1em;
+    line-height: 1em;
+} */
+.tree-view_arrow:hover {
+    color: white;
+}
+
+.tree-view_spacer {
+    min-width: 1em;
+    display: inline-block;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    font-size: x-large;
+    white-space: pre;
+}
+
+.tree-node-grab {
+    font-size: 18px;
+    margin: .25em 0 ;
+    cursor:grab;
+    opacity: 0;
+}
+
+.drop-zone {
+    height: 0;
+}
+.drop-zone-dragging {
+    height: .5em;
+    background-color: lightgray;
+    border: thin black dashed;
+    margin: 0 1em 0 3em;
+}
+.drag-handle {
+}
+.tree-node-grab:hover {
+    background-color: darkslategray;
+    opacity: 1;
+}
+
+.tree-node-icon {
+    margin: 1px .5em 1px 1px;
+    padding: 1px;
+    border-style: solid;
+    border-width: thin;
+    border-color: black;
+    color: #333;
+}
+
+.treeNodeClone {
+    background-color: black;
+    border: dashed white;
+}
+.can-drop {
+    background: lightblue;
+    height: 1.5em;
+}

@@ -1,6 +1,7 @@
-
+import set from 'lodash.set';
 import PouchDb from 'pouchdb';
 import pouchdbFind from 'pouchdb-find';
+
 PouchDb.plugin(pouchdbFind);
 
 let adapter;
@@ -22,7 +23,7 @@ export function destroy(){
 
 function pouchDb(){
     if (!db) {
-        db = new PouchDb('projectConfig', { adapter });
+        db = new PouchDb('projectModel', { adapter });
     }
     return db;
 }
@@ -61,7 +62,7 @@ export function getChildren(parentId){
                 include_docs: true // eslint-disable-line
             }))
             .then(result => {
-                return result.rows.map(r=>r.doc);
+                return result.rows.map(r=>({_id: r.doc._id, title: r.doc.title, ui: r.doc.ui || {}}));
             });
 }
 
@@ -69,8 +70,28 @@ export function insert(model){
     return pouchDb().put(model);
 }
 
-export function getById(id){
+export function update(_id, changes) {
+    return pouchDb()
+    .get(_id)
+    .then(toChange => {
+        let newRecord = {...toChange};
+        changes.forEach(change=>{
+            set(newRecord, change.propertyPath, change.value);
+        });
 
+        return pouchDb().put(newRecord).then(()=>({
+            oldModel: toChange,
+            newModel: newRecord
+        }));
+    }).catch(result=>{
+        if (result.status === 404) {
+            throw new Error('An existing document was not found to update.');
+        }
+    });
+}
+
+export function getById(id){
+    return pouchDb().get(id);
 }
 
 export function getModelsForTitle(title){

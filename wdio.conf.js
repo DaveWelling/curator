@@ -1,6 +1,6 @@
 exports.config = {
-    debug: true,
-    execArgv: ['--inspect=127.0.0.1:5859'],
+    //debug: true,
+    //execArgv: ['--inspect=127.0.0.1:5859'],
     //
     // ==================
     // Specify Test Files
@@ -132,7 +132,7 @@ exports.config = {
     // See the full list at http://mochajs.org/
     mochaOpts: {
         ui: 'bdd',
-        require: 'esm'
+        timeout: 999999
     },
     //
     // =====

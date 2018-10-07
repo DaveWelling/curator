@@ -21,7 +21,7 @@ export function destroy(){
 
 function pouchDb() {
     if (!db) {
-        db = new PouchDb('projectModels', { adapter });
+        db = new PouchDb('projectConfig', { adapter });
     }
     return db;
 }

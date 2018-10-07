@@ -1,4 +1,4 @@
-import expect from 'expect';
+const expect = require('expect');
 
 describe.skip('webdriver.io page', function() {
     it('should have the right title - the fancy generator way', function () {

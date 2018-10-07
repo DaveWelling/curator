@@ -1,21 +1,15 @@
 
 import thunk from 'redux-thunk';
 import treeNodeReducer from '../reducers/treeNodeReducer';
-import mainBodyReducer from '../reducers/mainBodyReducer';
 import { createStore, combineReducers, applyMiddleware, compose } from 'redux';
 import projectConfigReducer from '../reducers/projectConfigReducer';
-
+import modelReducer from '../reducers/modelReducer';
 import eventSink from './eventSink';
+import treeNodeMiddleware from './treeNodeMiddleware';
 
 const appReducer = combineReducers({
-    // eslint-disable-next-line camelcase
-    project_model: combineReducers({
-        treeNode: treeNodeReducer,
-        // drawing: drawingReducer,
-        // summary: summaryReducer,
-        // event: eventReducer,
-        mainBody: mainBodyReducer
-    }),
+    treeNodesByParentId: treeNodeReducer,
+    modelsById: modelReducer,
     // eslint-disable-next-line camelcase
     project_config: projectConfigReducer
 });
@@ -23,6 +17,6 @@ const appReducer = combineReducers({
 const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 const store = createStore(
     appReducer,
-    composeEnhancers(applyMiddleware(thunk, eventSink.eventSink))
+    composeEnhancers(applyMiddleware(thunk, treeNodeMiddleware, eventSink.eventSink))
 );
 export default store;
