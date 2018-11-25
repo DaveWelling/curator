@@ -11,8 +11,10 @@ describe('modelReducer', () => {
             let newState = modelReducer(state, {
                 type: 'update_project_model_success',
                 update: {
-                    _id: id1,
-                    some: 'differentStuff'
+                    newModel: {
+                        _id: id1,
+                        some: 'differentStuff'
+                    }
                 }
             });
             expect(newState[id1].some).toEqual('differentStuff');
@@ -27,8 +29,10 @@ describe('modelReducer', () => {
             let newState = modelReducer(state, {
                 type: 'update_project_model_success',
                 update: {
-                    _id: id1,
-                    some: 'differentStuff'
+                    newModel: {
+                        _id: id1,
+                        some: 'differentStuff'
+                    }
                 }
             });
             expect(newState[id2].some).toEqual('stuff2');

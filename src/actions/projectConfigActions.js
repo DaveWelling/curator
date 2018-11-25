@@ -6,6 +6,7 @@ let defaultConfig = {
     title: '',
     _id: cuid()
 };
+
 export function projectConfigChange(title) {
     return (dispatch, getState) => {
         let projectConfig = get(getState(), 'project_config');
@@ -23,6 +24,7 @@ export function projectConfigChange(title) {
             });
     };
 }
+
 export function loadProjectConfig() {
     return dispatch => {
         return projectConfigRepository.loadProjectConfig().then(result => {

@@ -4,6 +4,7 @@ import {getChildrenByParentId, projectModelChange} from '../../actions/projectMo
 import get from 'lodash.get';
 import PropType from 'prop-types';
 import nodeDragging, {WrapDraggable} from './nodeDragging';
+import TreeText from '../TreeText';
 import config from '../../config';
 import {Collapseable} from './nodeCollapseable';
 import './treeNode.css';
@@ -62,7 +63,10 @@ export class TreeNode extends React.Component {
         const { onTypeChange } = this;
         let { nextSequence, childTreeNodes, treeNode} = this.props;
 
-
+        /* Instead of trying to pass a single set of children by wrapping them
+           inside the Collapseable component, separately pass in those children
+           that will always be visible, and those that will be collapseable.
+           This makes it much easier to layout the render. */
         return (
             <WrapDraggable treeNode={treeNode}>
                 <Collapseable
@@ -70,11 +74,11 @@ export class TreeNode extends React.Component {
                     hasCollapseableChildren = {childTreeNodes && !!childTreeNodes.length}
                     alwaysVisibleChildren = {
                         <div className="tree-view-text">
-                            {treeNode.title}
-                            {/* <TreeText
-                                    treeNode={treeNode}
-                                nextSequence={nextSequence */ /* Saves a nasty lookup later*/ /*}
-                            /> */}
+                            <TreeText
+                                _id={treeNode._id}
+                                title={treeNode.title}
+                                nextSequence={nextSequence} /* Saves a nasty lookup later */
+                            />
                             <div className="select-container">
                                 <select value={treeNode.type} onChange={onTypeChange}>
                                     {config.modelTypes.map(type=>{
@@ -97,7 +101,7 @@ export class TreeNode extends React.Component {
                                     />
                                 );
                             })}
-                    </div>
+                        </div>
                     }
                 />
             </WrapDraggable>
@@ -120,7 +124,7 @@ const mapStateToProps = (state, ownprops) => {
 function mapDispatchToProps(dispatch, ownProps){
     return {
         onChange: (e)=>dispatch(
-            projectModelChange(e.currentTarget.value, e.currentTarget.name, ownProps.treeNode)
+            projectModelChange(e.currentTarget.value, e.currentTarget.name, ownProps.treeNode._id)
         ),
         dispatch
     };

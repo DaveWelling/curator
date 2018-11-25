@@ -1,15 +1,22 @@
 export default function modelReducer(state=[], action) {
-    if (action.type === 'update_project_model_success') {
-        return {
-            ...state,
-            [action.update._id]: action.update
-        };
-    }
-    if (action.type === 'insert_project_model_success') {
-        return {
-            ...state,
-            [action.insert._id]: action.insert
-        };
+    switch (action.type) {
+        case 'load_project_model_success':
+            return {
+                ...state,
+                [action.load._id]: action.load
+            };
+        case 'update_project_model_success':
+            return {
+                ...state,
+                [action.update.newModel._id]: action.update.newModel
+            };
+        case 'insert_project_model_success':
+            return {
+                ...state,
+                [action.insert._id]: action.insert
+            };
+        default:
+            break;
     }
     return state;
 }

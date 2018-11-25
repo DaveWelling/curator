@@ -70,8 +70,52 @@ export function insert(model){
     return pouchDb().put(model);
 }
 
+const debounce = require('debounce-promise');
+const existingDebounces = {};
+export function clearDebounceCache(){
+    Object.keys(existingDebounces).forEach(k=>delete existingDebounces[k]);
+}
+
+/**
+ * See https://www.npmjs.com/package/debounce-promise
+ * This will accumulate the arguments passed to the debounced function and pass them to the
+ * toDebounce function as an array which contains arrays of the passed params.
+ * It expectes the toDebounce function to return an array of results which will be
+ * the value of the resolved (or failed) promise.
+ * @param {function} toDebounce the function that should be debounced
+ * @param {function} idFunc the function that takes the arguments and returns the _id of the document that is being operated on by the DAL
+ * @param {number} waitTime the debounce time
+ * @param  {...any} args the paraameters for the function being debounced
+ */
+export function debounceById(toDebounce, idFunc, waitTime, ...args) {
+    if (idFunc) {
+        let id = idFunc(...args);
+        if (!existingDebounces[toDebounce] || !existingDebounces[toDebounce][id]) {
+            if (!existingDebounces[toDebounce]) {
+                existingDebounces[toDebounce] = {};
+            }
+            existingDebounces[toDebounce][id] = debounce(toDebounce, waitTime, {accumulate: true});
+        }
+        return existingDebounces[toDebounce][id](...args);
+    } else {
+        if (!existingDebounces[toDebounce]) {
+            existingDebounces[toDebounce] = debounce(toDebounce, waitTime, {accumulate: true});
+        }
+        return existingDebounces[toDebounce](...args);
+    }
+}
+
+
 export function update(_id, changes) {
-    return pouchDb()
+    return debounceById(innerUpdate, (args)=>args._id, 300, _id, changes);
+}
+
+function innerUpdate(accumulatedParams){
+    let expectedResultLength = accumulatedParams.length;
+    let _id = accumulatedParams[0][0]; // Should be the same _id for every call
+    // Reduce down the changes to a single hash.
+    let changes = accumulatedParams.reduce((accumulated, params)=>[...accumulated, ...params[1]], []);
+    let result = pouchDb()
     .get(_id)
     .then(toChange => {
         let newRecord = {...toChange};
@@ -79,15 +123,24 @@ export function update(_id, changes) {
             set(newRecord, change.propertyPath, change.value);
         });
 
-        return pouchDb().put(newRecord).then(()=>({
-            oldModel: toChange,
-            newModel: newRecord
-        }));
-    }).catch(result=>{
-        if (result.status === 404) {
+        return pouchDb().put(newRecord).then(()=>{
+            return {
+                oldModel: toChange,
+                newModel: newRecord
+            };
+        });
+    }).catch(error=>{
+        if (error.status === 404) {
             throw new Error('An existing document was not found to update.');
         }
+        throw error;
     });
+    // Sends the same result promise to every caller of the debouncing function.
+    let toReturn = [];
+    for (let index = 0; index < expectedResultLength; index++) {
+        toReturn.push(result);
+    }
+    return toReturn;
 }
 
 export function getById(id){

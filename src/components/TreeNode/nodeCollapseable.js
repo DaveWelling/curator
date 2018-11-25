@@ -1,88 +1,33 @@
 import React from 'react';
 import PropType from 'prop-types';
+import * as treeNodeActions from '../../actions/treeNodeActions';
 
+/* Instead of trying to pass a single set of children by wrapping them
+    inside the Collapseable component, separately pass in those children
+    that will always be visible, and those that will be collapseable.
+    This makes it much easier to layout the render. */
 export class Collapseable extends React.Component {
     constructor(props) {
         super(props);
 
         this.handleArrowClick = this.handleArrowClick.bind(this);
         this.handleWheel = this.handleWheel.bind(this);
-        this.tryChildCollapse = this.tryChildCollapse.bind(this);
-        this.tryCollapse = this.tryCollapse.bind(this);
-        this.tryExpand = this.tryExpand.bind(this);
-        this.tryChildExpand = this.tryChildExpand.bind(this);
-        this.childrenTryCollapses = [];
-        this.childrenTryExpands = [];
-    }
-
-    toggleCollapse() {
-        this.props.dispatch({
-            type: 'toggleCollapse_project_model',
-            toggleCollapse: {
-                _id: this.props.treeNode._id
-            }
-        });
     }
 
     handleArrowClick() {
-        this.toggleCollapse();
+        let {dispatch, treeNode} = this.props;
+        dispatch(treeNodeActions.toggleCollapse(treeNode));
     }
 
     // React Synth event: https://developer.mozilla.org/en-US/docs/Web/Events/wheel
     handleWheel(e) {
         e.preventDefault();
+        let {dispatch, treeNode} = this.props;
         if (e.deltaY < 0) {
-            this.tryCollapse();
+            dispatch(treeNodeActions.tryAscendingCollapse(treeNode));
         } else if (e.deltaY > 0) {
-            this.tryExpand();
+            dispatch(treeNodeActions.tryDescendingExpansion(treeNode));
         }
-    }
-
-    tryExpand() {
-        // To expand, must be collapsed and have something (other than _meta) inside
-        if (this.props.treeNode.ui.collapsed && this.props.hasCollapseableChildren) {
-            this.props.dispatch({
-                type: 'expand_project_model',
-                expand: {
-                    _id: this.props.treeNode._id
-                }
-            });
-            return true;
-        } else {
-            return !!this.tryChildExpand();
-        }
-    }
-    tryCollapse() {
-        if (this.props.treeNode.ui.collapsed) {
-            return false;
-        } else {
-            if (!this.tryChildCollapse()) {
-                this.props.dispatch({
-                    type: 'collapse_project_model',
-                    collapse: {
-                        _id: this.props.treeNode._id
-                    }
-                });
-            }
-            return true;
-        }
-    }
-
-    tryChildExpand() {
-        for (let i = 0; i < this.childrenTryExpands.length; i++) {
-            if (this.childrenTryExpands[i] && this.childrenTryExpands[i]()) {
-                return true;
-            }
-        }
-        return false;
-    }
-    tryChildCollapse() {
-        for (let i = this.childrenTryCollapses.length - 1; i >= 0; i--) {
-            if (this.childrenTryCollapses[i] && this.childrenTryCollapses[i]()) {
-                return true;
-            }
-        }
-        return false;
     }
 
     render() {
@@ -118,12 +63,13 @@ export class Collapseable extends React.Component {
                 onClick={e => e.stopPropagation}
                 onWheel={this.handleWheel}
             >
-                {hasCollapseableChildren && collapsed && ArrowRight}
-                {hasCollapseableChildren && !collapsed && ArrowDown}
-                {!hasCollapseableChildren && <span className="tree-view_spacer" />}
+                <div className="tree-view-item-top">
+                    {hasCollapseableChildren && collapsed && ArrowRight}
+                    {hasCollapseableChildren && !collapsed && ArrowDown}
+                    {!hasCollapseableChildren && <span className="tree-view_spacer" />}
 
-                {alwaysVisibleChildren}
-
+                    {alwaysVisibleChildren}
+                </div>
                 <div className={containerClassName}>{!collapsed && collapsingChildren}</div>
             </div>
         );

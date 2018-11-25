@@ -1,3 +1,8 @@
 .TreeView {
     margin: 1em;
 }
+
+.projectName {
+    margin: 0 0 .75em .75em;
+    border-radius: .25em;
+}
