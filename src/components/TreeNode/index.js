@@ -10,12 +10,6 @@ import {Collapseable} from './nodeCollapseable';
 import './treeNode.css';
 
 export class TreeNode extends React.Component {
-    constructor(props) {
-        super(props);
-        this.onValueChange = this.onValueChange.bind(this);
-        this.onTypeChange = this.onTypeChange.bind(this);
-    }
-
     componentWillMount(){
         getChildrenByParentId(this.props.treeNode._id);
     }
@@ -24,44 +18,8 @@ export class TreeNode extends React.Component {
         nodeDragging(this.props.treeNode, this.props.dispatch);
     }
 
-    onTypeChange(newType) {
-        const {
-            dispatch,
-            treeNode: { _id }
-        } = this.props;
-        dispatch({
-            type: 'update_project_model',
-            update: {
-                _id,
-                changes: {
-                    type: newType.target.value
-                }
-            }
-        });
-        dispatch(focus({
-            ...this.props.treeNode,
-            type: newType.target.value
-        }));
-
-    }
-    onValueChange(newValue) {
-        const {
-            dispatch,
-            treeNode: { _id }
-        } = this.props;
-        dispatch({
-            type: 'update_project_model',
-            update: {
-                _id,
-                changes: {
-                    title: newValue
-                }
-            }
-        });
-    }
     render() {
-        const { onTypeChange } = this;
-        let { nextSequence, childTreeNodes, treeNode} = this.props;
+        let { onChange, nextSequence, childTreeNodes, treeNode, dispatch} = this.props;
 
         /* Instead of trying to pass a single set of children by wrapping them
            inside the Collapseable component, separately pass in those children
@@ -72,15 +30,15 @@ export class TreeNode extends React.Component {
                 <Collapseable
                     treeNode={treeNode}
                     hasCollapseableChildren = {childTreeNodes && !!childTreeNodes.length}
+                    dispatch={dispatch}
                     alwaysVisibleChildren = {
                         <div className="tree-view-text">
                             <TreeText
-                                _id={treeNode._id}
-                                title={treeNode.title}
+                                model={treeNode}
                                 nextSequence={nextSequence} /* Saves a nasty lookup later */
                             />
                             <div className="select-container">
-                                <select value={treeNode.type} onChange={onTypeChange}>
+                                <select name="type" value={treeNode.type} onChange={onChange}>
                                     {config.modelTypes.map(type=>{
                                         return <option key={type.title} value={type.title}>{type.prettyName}</option>;
                                     })}
@@ -111,7 +69,8 @@ export class TreeNode extends React.Component {
 TreeNode.propTypes = {
     treeNode: PropType.object.isRequired,
     dispatch: PropType.func.isRequired,
-    childTreeNodes: PropType.array.isRequired
+    childTreeNodes: PropType.array.isRequired,
+    onChange: PropType.func.isRequired
 };
 
 const mapStateToProps = (state, ownprops) => {
@@ -124,7 +83,7 @@ const mapStateToProps = (state, ownprops) => {
 function mapDispatchToProps(dispatch, ownProps){
     return {
         onChange: (e)=>dispatch(
-            projectModelChange(e.currentTarget.value, e.currentTarget.name, ownProps.treeNode._id)
+            projectModelChange(e.currentTarget.value, e.currentTarget.name, ownProps.treeNode)
         ),
         dispatch
     };

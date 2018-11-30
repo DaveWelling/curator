@@ -1,5 +1,5 @@
 import interact from 'interactjs';
-import { setAsNextSiblingOfModel } from '../../actions/projectModelActions';
+import { setAsNextSiblingOfModel } from '../../actions/treeNodeActions';
 import React from 'react';
 import PropType from 'prop-types';
 
@@ -91,7 +91,7 @@ export default function add(treeNode, dispatch) {
             const dropzoneElement = e.target;
             dropzoneElement.classList.remove('can-drop');
             let draggedModelId = e.draggable.target.split('_')[1];
-            dispatch(setAsNextSiblingOfModel(draggedModelId, treeNode._id));
+            dispatch(setAsNextSiblingOfModel(draggedModelId, treeNode));
         }
     });
 }

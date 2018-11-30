@@ -249,6 +249,7 @@ describe('projectModelsRepository', () => {
         it('calls the passed function', function(done) {
             repository.debounceById(() => {
                 done();
+                return Promise.resolve([]);
             });
         });
         describe('called twice within debounce wait time', function() {
@@ -257,7 +258,7 @@ describe('projectModelsRepository', () => {
                     let count = 0;
                     let testFunction = () => {
                         count++;
-                        Promise.resolve();
+                        return Promise.resolve([]);
                     };
                     Promise.all([
                         repository.debounceById(testFunction, null, 100),
@@ -272,7 +273,7 @@ describe('projectModelsRepository', () => {
                         let count = 0;
                         let testFunction = () => {
                             count++;
-                            Promise.resolve();
+                            return Promise.resolve([]);
                         };
                         let idFunction = (args)=>{
                             return args._id;
@@ -291,7 +292,7 @@ describe('projectModelsRepository', () => {
                         let count = 0;
                         let testFunction = () => {
                             count++;
-                            Promise.resolve();
+                            return Promise.resolve([]);
                         };
                         let idFunction = (args)=>{
                             return args._id;
@@ -311,12 +312,12 @@ describe('projectModelsRepository', () => {
                     let count1 = 0;
                     let testFunction1 = () => {
                         count1++;
-                        Promise.resolve();
+                        return Promise.resolve([]);
                     };
                     let count2 = 0;
                     let testFunction2 = () => {
                         count2++;
-                        Promise.resolve();
+                        return Promise.resolve([]);
                     };
                     Promise.all([
                         repository.debounceById(testFunction1, null, 100),

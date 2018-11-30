@@ -37,20 +37,56 @@ export function getModel(_id) {
     };
 }
 
-export function projectModelChange(value, propertyPath, modelId) {
-    return dispatch => {
-        let changes = [
-            {
-                propertyPath,
-                value
-            }
-        ];
-        return repository.update(modelId, changes).then(result => {
-            dispatch({
-                type: 'update_project_model_success',
-                update: result
+export function getCachedModel(_id, state, dispatch) {
+    let foundModel = state.modelsById[_id];
+    if (!foundModel) {
+        return getModel(_id)(dispatch).then(dbModel=>{
+            return dbModel;
+        });
+    } else {
+        return Promise.resolve(foundModel);
+    }
+}
+
+export function projectModelChange(value, propertyPath, model) {
+    return (dispatch, getState) => {
+        return projectModelChanges([{
+            propertyPath,
+            value
+        }], model)(dispatch, getState);
+    };
+}
+export function projectModelChanges(changes, model) {
+    return (dispatch, getState) => {
+        return getCachedModel(model._id, getState(), dispatch).then(oldModel=>{
+            let newModel = {...oldModel};
+            changes.forEach(c=>{
+                set(newModel, c.propertyPath, c.value);
             });
-            return result;
+            dispatch({
+                type: 'update_project_model',
+                update: {
+                    oldModel,
+                    newModel
+                }
+            });
+
+            return repository.update(model._id, changes).then(result => {
+                dispatch({
+                    type: 'update_project_model_confirm',
+                    update: result
+                });
+                return result;
+            }).catch(err=>{
+                dispatch({
+                    type: 'update_project_model_rollback',
+                    update: {
+                        oldModel,
+                        newModel,
+                        err
+                    }
+                });
+            });
         });
     };
 }
@@ -70,32 +106,29 @@ export function createDefaultModel(rootParentId) {
     };
 }
 
-export function setAsNextSiblingOfModel(modelIdGettingSibling, newSiblingModelId) {
-    throw new Error('not implemented');
-}
-
 export function createNextSiblingOfModel(modelId, nextSiblingModel) {
     return (dispatch, getState) => {
         let state = getState();
-        let currentModel = state.modelsById[modelId];
-        let siblings = state.treeNodesByParentId[currentModel.parentId];
+        return getCachedModel(modelId, state, dispatch).then(currentModel=>{
+            let siblings = state.treeNodesByParentId[currentModel.parentId];
 
-        set(nextSiblingModel, 'ui.sequence', getNewSequence(currentModel, siblings));
-        nextSiblingModel.parentId = currentModel.parentId;
+            set(nextSiblingModel, 'ui.sequence', getNewSequenceAfterCurrentModel(currentModel, siblings));
+            nextSiblingModel.parentId = currentModel.parentId;
 
-        return repository.insert(nextSiblingModel).then(() => {
-            dispatch({
-                type: 'insert_project_model_success',
-                insert: {
-                    ...nextSiblingModel
-                }
+            return repository.insert(nextSiblingModel).then(() => {
+                dispatch({
+                    type: 'insert_project_model_success',
+                    insert: {
+                        ...nextSiblingModel
+                    }
+                });
+                return nextSiblingModel;
             });
-            return nextSiblingModel;
         });
     };
 }
 
-function getNewSequence(currentModel, siblings) {
+export function getNewSequenceAfterCurrentModel(currentModel, siblings) {
     // Do not mutate state.
     let orderedSiblings = [...siblings].sort((a, b) => get(a, 'ui.sequence', 0) - get(b, 'ui.sequence', 0));
     let currentIndex = orderedSiblings.findIndex(m => m._id === currentModel._id);

@@ -65,6 +65,7 @@ describe('projectModelActions', () => {
     describe('projectModelChange', function() {
         let updateSpy,
             _id = cuid(),
+            getStateSpy,
             dispatchSpy;
         let newTitle = cuid();
         let expectedModel = { _id, title: newTitle };
@@ -73,6 +74,11 @@ describe('projectModelActions', () => {
         beforeEach(() => {
             dispatchSpy = createSpy();
             updateSpy = spyOn(repository, 'update');
+            getStateSpy = createSpy().andReturn({
+                modelsById: {
+                    [_id]: startingModel
+                }
+            });
         });
         it('requests update', done => {
             updateSpy.andCall((updateId, changes) => {
@@ -81,22 +87,25 @@ describe('projectModelActions', () => {
                 expect(changes[0].value).toBe(false);
                 return Promise.resolve({});
             });
-            projectModelChange(false, 'ui.collapsed', startingModel._id)(dispatchSpy)
-                .then(() => done())
+            projectModelChange(false, 'ui.collapsed', startingModel)(dispatchSpy, getStateSpy)
+                .then(() => {
+                    expect(updateSpy).toHaveBeenCalled();
+                    done();
+                })
                 .catch(done);
-            expect(updateSpy).toHaveBeenCalled();
+
         });
-        it('dispatches update_project_model_success', done => {
+        it('dispatches update_project_model', done => {
             updateSpy.andReturn(
                 Promise.resolve({
                     newModel: expectedModel,
                     oldModel: startingModel
                 })
             );
-            projectModelChange(cuid(), 'title', startingModel._id)(dispatchSpy)
+            projectModelChange(newTitle, 'title', startingModel)(dispatchSpy, getStateSpy)
                 .then(() => {
                     let successCall = dispatchSpy.calls.find(
-                        c => c.arguments && c.arguments[0].type === 'update_project_model_success'
+                        c => c.arguments && c.arguments[0].type === 'update_project_model'
                     );
                     expect(successCall).toExist();
                     expect(successCall.arguments[0].update.newModel._id).toBe(_id);
@@ -169,7 +178,7 @@ describe('projectModelActions', () => {
             modelsById = {};
             treeNodesByParentId = {};
         });
-        it('Creates new database entry with parent id proper sequence', function() {
+        it('Creates new database entry with parent id proper sequence', function(done) {
             insertSpy.andCall(model=>{
                 expect(model.parentId).toEqual(currentModel.parentId);
                 expect(model.ui.sequence).toEqual(1.5);
@@ -179,8 +188,10 @@ describe('projectModelActions', () => {
             createNextSiblingOfModel(currentModel._id, {
                 _id: cuid(),
                 title: 'test'
-            })(dispatchSpy, getStateSpy);
-            expect(insertSpy).toHaveBeenCalled();
+            })(dispatchSpy, getStateSpy).then(()=>{
+                expect(insertSpy).toHaveBeenCalled();
+                done();
+            }).catch(done);
         });
     });
 });

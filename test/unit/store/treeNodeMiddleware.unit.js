@@ -1,4 +1,4 @@
-import expect, {spyOn, createSpy, restoreSpies} from 'expect';
+import expect, {spyOn, createSpy} from 'expect';
 import * as projectModelActions from '../../../src/actions/projectModelActions';
 import cuid from 'cuid';
 import treeNodeMiddleware from '../../../src/store/treeNodeMiddleware';
@@ -19,21 +19,72 @@ describe('treeNodeMiddleware', () => {
         });
     });
 
-    describe('update_project_model_success', () => {
-        describe('parentId changes', () => {
-            const oldParentId = cuid();
-            const newParentId = cuid();
-            it('calls getChildrenByParentId for the new model\'s parent', () => {
+    describe('update_project_model', () => {
+        let dispatchSpy, getStateSpy, _id, parentId, store, startingModel;
+        beforeEach(function(){
+            _id = cuid();
+            parentId = cuid();
+            startingModel = {
+                _id, parentId, title: 'starting title'
+            };
+            dispatchSpy = createSpy();
+            getStateSpy = createSpy().andReturn({
+                treeNodesByParentId: {
+                    [parentId]: [startingModel]
+                }
+            });
+            store = {
+                dispatch: dispatchSpy,
+                getState: getStateSpy
+            };
+        });
+        describe('title of a model changes', function(){
+            it('dispatches a load_project_modelChildren_success with the change', function(){
                 let action = {
-                    type: 'update_project_model_success',
+                    type: 'update_project_model',
                     update: {
-                        oldModel: {parentId: oldParentId},
-                        newModel: {parentId: newParentId}
+                        oldModel: startingModel,
+                        newModel: {
+                            ...startingModel,
+                            title: 'new title'
+                        }
                     }
                 };
-                treeNodeMiddleware({})(()=>{})(action);
-                expect(getChildrenByParentIdSpy).toHaveBeenCalledWith(newParentId);
-                expect(getChildrenByParentIdSpy).toHaveBeenCalledWith(oldParentId);
+                treeNodeMiddleware(store)(()=>{})(action);
+                expect(dispatchSpy).toHaveBeenCalled();
+                expect(dispatchSpy.calls.length).toEqual(2);
+                expect(dispatchSpy.calls[0].arguments[0].type).toEqual('load_project_modelChildren_success');
+                let newModels = dispatchSpy.calls[0].arguments[0].load.models;
+                expect(newModels.length).toEqual(1);
+                expect(newModels[0].title).toEqual('new title');
+            });
+        });
+        describe('parentId changes', () => {
+            const newParentId = cuid();
+            it('dispatches a load_project_modelChildren_success for both the new and old parentId', function(){
+                let action = {
+                    type: 'update_project_model',
+                    update: {
+                        oldModel: startingModel,
+                        newModel: {
+                            ...startingModel,
+                            parentId: newParentId
+                        }
+                    }
+                };
+                treeNodeMiddleware(store)(()=>{})(action);
+                expect(dispatchSpy).toHaveBeenCalled();
+                expect(dispatchSpy.calls.length).toEqual(3);
+                expect(dispatchSpy.calls[0].arguments[0].type).toEqual('load_project_modelChildren_success');
+                expect(dispatchSpy.calls[0].arguments[0].load.parentId).toEqual(parentId);
+                let newSourceModels = dispatchSpy.calls[0].arguments[0].load.models;
+                expect(newSourceModels.length).toEqual(0);
+
+                expect(dispatchSpy.calls[1].arguments[0].type).toEqual('load_project_modelChildren_success');
+                expect(dispatchSpy.calls[1].arguments[0].load.parentId).toEqual(newParentId);
+                let newDestinationModels = dispatchSpy.calls[1].arguments[0].load.models;
+                expect(newDestinationModels.length).toEqual(1);
+                expect(newDestinationModels[0].parentId).toEqual(newParentId);
             });
         });
     });

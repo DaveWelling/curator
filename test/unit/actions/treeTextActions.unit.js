@@ -33,7 +33,7 @@ describe('keyCode', function(){
                         expect(nextSiblingModel.title).toEqual('');
                     };
                 });
-                treeTextActions.keyDown(13, preventDefaultSpy, input, _id)(dispatchSpy);
+                treeTextActions.keyDown(13, preventDefaultSpy, input, {_id})(dispatchSpy);
                 expect(createNextSiblingOfModelSpy).toHaveBeenCalled();
             });
         });
@@ -51,19 +51,19 @@ describe('keyCode', function(){
                         expect(nextSiblingModel.title).toEqual('bones');
                     };
                 });
-                treeTextActions.keyDown(13, preventDefaultSpy, input, _id)(dispatchSpy);
+                treeTextActions.keyDown(13, preventDefaultSpy, input, {_id})(dispatchSpy);
                 expect(createNextSiblingOfModelSpy).toHaveBeenCalled();
             });
             it('calls projectModelChange on existing model with first part of title', function(){
                 createNextSiblingOfModelSpy.andReturn(()=>{});
-                projectModelChangeSpy.andCall((newModelValue, propertyName, modelId)=>{
+                projectModelChangeSpy.andCall((newModelValue, propertyName, model)=>{
                     return ()=>{
-                        expect(modelId).toEqual(_id);
+                        expect(model._id).toEqual(_id);
                         expect(newModelValue).toEqual('dog');
                         expect(propertyName).toEqual('title');
                     };
                 });
-                treeTextActions.keyDown(13, preventDefaultSpy, input, _id)(dispatchSpy);
+                treeTextActions.keyDown(13, preventDefaultSpy, input, {_id})(dispatchSpy);
                 expect(projectModelChangeSpy).toHaveBeenCalled();
             });
         });
