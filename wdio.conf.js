@@ -1,6 +1,6 @@
 exports.config = {
-    //debug: true,
-    //execArgv: ['--inspect=127.0.0.1:5859'],
+    debug: true,
+    execArgv: ['--inspect=127.0.0.1:5859'],
     //
     // ==================
     // Specify Test Files
@@ -45,7 +45,7 @@ exports.config = {
         // 5 instances get started at a time.
         maxInstances: 5,
         //
-        browserName: 'firefox'
+        browserName: 'chrome'
     }],
     //
     // ===================
@@ -252,4 +252,4 @@ exports.config = {
      */
     // onComplete: function(exitCode, config, capabilities) {
     // }
-}
+};

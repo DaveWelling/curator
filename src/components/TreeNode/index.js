@@ -11,7 +11,7 @@ import './treeNode.css';
 
 export class TreeNode extends React.Component {
     componentWillMount(){
-        getChildrenByParentId(this.props.treeNode._id);
+        this.props.dispatch(getChildrenByParentId(this.props.treeNode._id));
     }
 
     componentDidMount() {

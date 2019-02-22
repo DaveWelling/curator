@@ -9,6 +9,18 @@ describe('projectModelsRepository', () => {
             .then(() => done())
             .catch(done);
     });
+    describe('remove', function(){
+        describe('model exists', function(){
+            it('is removed', function(){
+                throw new Error('not implemented');
+            });
+        });
+        describe('model does not exist', function(){
+            it('does nothing', function(){
+                throw new Error('not implemented');
+            });
+        });
+    });
     describe('getChildren', () => {
         describe('given a parent id with children', () => {
             let parentId = 'p1';

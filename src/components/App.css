@@ -45,7 +45,7 @@ select {
   font-size: small;
   color: lightslategray;
   background: black;
-  border-color: lightslategray;
+  border-color: black;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	overflow: hidden;
@@ -57,8 +57,16 @@ select {
   position:relative; display: inline;
 }
 
-.select-container:after {content:""; width:0; height:0; position:absolute; pointer-events: none;}
-.select-container:after {
+.select-container:hover:after {content:""; width:0; height:0; position:absolute; pointer-events: none;}
+.select-container:hover:after {
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    top: .6em;
+    right: .55em;
+    border-top: 9px solid lightslategray;
+}
+.select-container:focus:after {content:""; width:0; height:0; position:absolute; pointer-events: none;}
+.select-container:focus:after {
     border-left: 6px solid transparent;
     border-right: 6px solid transparent;
     top: .6em;

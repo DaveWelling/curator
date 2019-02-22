@@ -45,7 +45,11 @@ export function getChildren(parentId) {
     };
     // Create the index - noop if it already exists.
     return pouchDb()
-        .put(ddoc)
+        .createIndex({
+            index: {
+                fields: ['parentId']
+            }
+        })
         .catch(function(err) {
             if (err.name !== 'conflict') {
                 throw err;
@@ -53,14 +57,18 @@ export function getChildren(parentId) {
             // ignore if doc already exists
         })
         .then(() =>
-            pouchDb().query('parentSort', {
-                startKey: parentId,
-                endKey: parentId,
-                include_docs: true // eslint-disable-line
+            pouchDb().find({
+                selector: {parentId},
+                fields: ['_id', 'title', 'type', 'parentId', 'ui'],
+                sort: ['parentId']
             })
         )
         .then(result => {
-            return result.rows.map(r => ({ _id: r.doc._id, title: r.doc.title, type: r.doc.type, parentId: r.doc.parentId, ui: r.doc.ui || {} }));
+            return result.docs;
+        })
+        .catch(err=>{
+            if (err.status === 404) return [];
+            throw err;
         });
 }
 
@@ -107,6 +115,16 @@ export function update(_id, changes) {
     return debounceById(innerUpdate, args => args._id, 300, _id, changes);
 }
 
+export function remove(model) {
+    return pouchDb().get(model._Id).then(toRemove=>{
+        return pouchDb().remove(toRemove);
+    }).catch(error => {
+        if (error.status !== 404) {
+            throw error;
+        }
+    });
+}
+
 function innerUpdate(accumulatedParams) {
     let expectedResultLength = accumulatedParams.length;
     let _id = accumulatedParams[0][0]; // Should be the same _id for every call
@@ -144,7 +162,12 @@ function innerUpdate(accumulatedParams) {
 }
 
 export function getById(id) {
-    return pouchDb().get(id);
+    return pouchDb()
+    .get(id)
+    .catch(err=>{
+        if (err.status === 404) return;
+        throw err;
+    });
 }
 
 export function getModelsForTitle(title) {

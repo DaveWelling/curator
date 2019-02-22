@@ -6,6 +6,7 @@ import './treeView.css';
 import get from 'lodash.get';
 import { projectConfigChange } from '../actions/projectConfigActions';
 import { getChildrenByParentId } from '../actions/projectModelActions';
+import FocusManager from './FocusManager';
 
 export class TreeView extends React.Component {
     componentWillMount() {
@@ -14,21 +15,22 @@ export class TreeView extends React.Component {
     render() {
         let { projectConfig: {title}, onChange, treeNodes } = this.props;
         return (
-            <div className="TreeView">
-                <input
-                    id="projectName"
-                    className="projectName"
-                    placeholder="Put a project name here"
-                    type="text"
-                    value={title}
-                    onChange={onChange}
-                />
-                {treeNodes.map((treeNode, index) => {
-                    // Saves a nasty lookup later
-                    let nextSequence = treeNodes[index + 1] ? treeNodes[index + 1].sequence : undefined;
-                    return <TreeNode key={treeNode._id} treeNode={treeNode} nextSequence={nextSequence} />;
-                })}
-            </div>
+            <FocusManager className="TreeView" prefixForFocusableId="treeTextTitle">
+
+                    <input
+                        id="projectName"
+                        className="projectName"
+                        placeholder="Put a project name here"
+                        type="text"
+                        value={title}
+                        onChange={onChange}
+                    />
+                    {treeNodes.map((treeNode, index) => {
+                        // Saves a nasty lookup later
+                        let nextSequence = treeNodes[index + 1] ? treeNodes[index + 1].sequence : undefined;
+                        return <TreeNode key={treeNode._id} treeNode={treeNode} nextSequence={nextSequence} />;
+                    })}
+            </FocusManager>
         );
     }
 }

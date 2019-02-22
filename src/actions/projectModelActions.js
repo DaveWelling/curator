@@ -128,6 +128,42 @@ export function createNextSiblingOfModel(modelId, nextSiblingModel) {
     };
 }
 
+export function removeNode(model) {
+    return (dispatch, getState) => {
+        dispatch({
+            type: 'remove_project_model_success',
+            remove: {
+                model
+            }
+        });
+        dispatch({
+            type:'remove_project_modelChildren_success',
+            remove: {
+                model
+            }
+        });
+
+        return repository.remove(model).then(result => {
+            dispatch({
+                type: 'update_project_model_confirm',
+                remove: {
+                    model,
+                    result
+                }
+            });
+            return result;
+        }).catch(err=>{
+            dispatch({
+                type: 'update_project_model_rollback',
+                remove: {
+                    model,
+                    err
+                }
+            });
+        });
+    };
+}
+
 export function getNewSequenceAfterCurrentModel(currentModel, siblings) {
     // Do not mutate state.
     let orderedSiblings = [...siblings].sort((a, b) => get(a, 'ui.sequence', 0) - get(b, 'ui.sequence', 0));

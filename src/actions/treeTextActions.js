@@ -1,13 +1,16 @@
-import {createNextSiblingOfModel, projectModelChange} from './projectModelActions';
+import {createNextSiblingOfModel, projectModelChange, getCachedModel} from './projectModelActions';
 import cuid from 'cuid';
-import {goToNext, goToPrevious, makeChildOfPreviousSibling, makeNextSiblingOfParent} from './treeNodeActions';
+import {goToNext, goToPrevious, makeChildOfPreviousSibling, makeNextSiblingOfParent, ensureVisible, mergeWithPreviousSibling} from './treeNodeActions';
+import {focusOnTreeNode} from './focusActions';
 
 export function keyDown(keyCode, preventDefault, input, model, shiftKey) {
     return (dispatch, getState) => {
         switch (keyCode) {
             case 13: // Enter Key
-                createNewSibling();
                 preventDefault();
+                focusOnTreeNode(
+                    createNewSibling()
+                )(dispatch, getState);
                 break;
             case 38: // Arrow up
                 goToPrevious(model)(dispatch, getState);
@@ -18,13 +21,20 @@ export function keyDown(keyCode, preventDefault, input, model, shiftKey) {
                 preventDefault();
                 break;
             case 9: // Tab
+                preventDefault();
                 if (shiftKey) {
                     makeNextSiblingOfParent(model)(dispatch, getState);
                 } else {
                     makeChildOfPreviousSibling(model)(dispatch, getState);
                 }
-                preventDefault();
+                focusOnTreeNode(model)(dispatch, getState);
                 break;
+        case 8: // Backspace
+            if (input.selectionStart === 0) {
+                dispatch(mergeWithPreviousSibling(model));
+                preventDefault();
+            }
+            break;
             default:
                 break;
         }
@@ -35,10 +45,12 @@ export function keyDown(keyCode, preventDefault, input, model, shiftKey) {
             const newModelValue = value.substr(0, offset).trim();
             const newSiblingValue = value.substr(offset).trim();
             projectModelChange(newModelValue, 'title', model)(dispatch, getState);
-            createNextSiblingOfModel(model._id, {
+            let newModel = {
                 _id: cuid(),
                 title: newSiblingValue
-            })(dispatch, getState);
+            };
+            createNextSiblingOfModel(model._id, newModel)(dispatch, getState);
+            return newModel;
         }
     };
 }

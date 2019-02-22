@@ -3,13 +3,31 @@
 
 
 const sendInput = function(selector, inputString, keyIndex = 0) {
-    browser.addValue(selector, inputString.substr(keyIndex, 1));
+    let input;
+    if (typeof selector === 'string') {
+        input = $(selector);
+    } else {
+        input = selector;
+    }
+    if (!input.hasFocus()) {
+        input.click();
+    }
+
+    input.addValue(inputString.substr(keyIndex, 1));
     browser.waitUntil(() => {
-        let value = browser.getValue(selector);
+
+        if (!input.hasFocus()) return true;
+
+        let value;
+        if (input.getAttribute('contenteditable')) {
+            value = input.getText();
+        } else {
+            value = input.getValue();
+        }
         return value === inputString.substr(0, keyIndex + 1);
     });
-    if (keyIndex < inputString.length) {
-        return sendInput(selector, inputString, keyIndex + 1);
+    if (keyIndex+1 < inputString.length) {
+        return sendInput(input, inputString, keyIndex + 1);
     }
 };
 

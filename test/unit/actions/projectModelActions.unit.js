@@ -194,4 +194,7 @@ describe('projectModelActions', () => {
             }).catch(done);
         });
     });
+    describe('removeModel', function(){
+
+    });
 });

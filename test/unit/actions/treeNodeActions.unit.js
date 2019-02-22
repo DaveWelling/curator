@@ -5,18 +5,163 @@ import * as modelActions from '../../../src/actions/projectModelActions';
 
 describe('treeNodeActions', () => {
     afterEach(restoreSpies);
+    describe('ensureVisible', function(){
+        describe('node parent is collapsed', function(){
+            it('expands parent', function(done){
+                let parentNode = {_id: cuid(), ui:{collapsed:true}};
+                let currentNode = {_id: cuid(), parentId: parentNode._id};
+                let state = {
+                    treeNodesByParentId: {
+                        [parentNode._id]: [currentNode]
+                    }
+                };
+                let getStateMock = ()=> state;
+                let lookupCount = 0;
+                spyOn(modelActions, 'getCachedModel').andCall(()=>{
+                    lookupCount++;
+                    switch (lookupCount) {
+                        case 1:
+                            return Promise.resolve(parentNode);
+                        default:
+                            return Promise.resolve(undefined);
+                    }
+                });
+
+                let projectModelChangeSpy = spyOn(modelActions, 'projectModelChange').andReturn(()=>Promise.resolve(undefined));
+                treeNodeActions.ensureVisible(currentNode)(()=>{}, getStateMock).then(()=>{
+                    expect(projectModelChangeSpy).toHaveBeenCalled();
+                    let callParms = projectModelChangeSpy.calls[0].arguments;
+                    expect(callParms[1]).toEqual('ui.collapsed');
+                    expect(callParms[0]).toEqual(false);
+                    done();
+                }).catch(done);
+            });
+        });
+        describe('node parent\'s parent is collapsed', function(){
+            it('expands grandparent', function(done){
+                let grandparentNode = {_id: cuid(), ui:{collapsed:true}};
+                let parentNode = {_id: cuid(), ui:{collapsed:false}};
+                let currentNode = {_id: cuid(), parentId: parentNode._id};
+                let state = {
+                    treeNodesByParentId: {
+                        [parentNode._id]: [currentNode],
+                        [grandparentNode._id]: [parentNode]
+                    }
+                };
+                let getStateMock = ()=> state;
+                let lookupCount = 0;
+                spyOn(modelActions, 'getCachedModel').andCall(()=>{
+                    lookupCount++;
+                    switch (lookupCount) {
+                        case 1:
+                            return Promise.resolve(parentNode);
+                        case 2:
+                            return Promise.resolve(grandparentNode);
+                        default:
+                            return Promise.resolve(undefined);
+                    }
+                });
+
+                let projectModelChangeSpy = spyOn(modelActions, 'projectModelChange').andReturn(()=>Promise.resolve(undefined));
+                treeNodeActions.ensureVisible(currentNode)(()=>{}, getStateMock).then(()=>{
+                    expect(projectModelChangeSpy).toHaveBeenCalled();
+                    let callParms = projectModelChangeSpy.calls[0].arguments;
+                    expect(callParms[2]).toBe(grandparentNode);
+                    expect(callParms[1]).toEqual('ui.collapsed');
+                    expect(callParms[0]).toEqual(false);
+                    done();
+                }).catch(done);
+            });
+        });
+    });
+    describe('makeChildOfPreviousSibling', function(){
+        describe('previous sibling does not exist', function(){
+            it('does nothing', function(){
+                let parentNode = {_id: cuid()};
+                let currentNode = {_id: cuid(), parentId: parentNode._id};
+                let state = {
+                    treeNodesByParentId: {
+                        [parentNode._id]: [currentNode]
+                    }
+                };
+                let getStateMock = ()=> state;
+                let projectModelChangeSpy = spyOn(modelActions, 'projectModelChanges').andReturn(()=>Promise.resolve(undefined));
+                treeNodeActions.makeChildOfPreviousSibling(currentNode)(()=>{}, getStateMock);
+                expect(projectModelChangeSpy).toNotHaveBeenCalled();
+            });
+        });
+        describe('previous sibling has children', function(){
+            let projectModelChangeSpy, siblingNode;
+            beforeEach(function(){
+
+                let currentParentId = cuid();
+                siblingNode = {_id: cuid(), parentId: currentParentId, ui: {sequence: 0}};
+                let currentNode = {_id: cuid(), parentId: currentParentId, ui: {sequence: 1}};
+                let siblingChildNode = {_id: cuid(), parentId: siblingNode._id, ui: {sequence: 0}};
+                let state = {
+                    treeNodesByParentId: {
+                        [siblingNode._id]: [siblingChildNode],
+                        [currentParentId]: [currentNode, siblingNode]
+                    }
+                };
+                let getStateMock = ()=> state;
+                projectModelChangeSpy = spyOn(modelActions, 'projectModelChanges').andReturn(()=>Promise.resolve(undefined));
+                treeNodeActions.makeChildOfPreviousSibling(currentNode)(()=>{}, getStateMock);
+            });
+            it('sets model as new child', function(){
+                expect(projectModelChangeSpy).toHaveBeenCalled();
+                let changes = projectModelChangeSpy.calls[0].arguments[0];
+                expect(changes[0].value).toEqual(siblingNode._id);
+                expect(changes[0].propertyPath).toEqual('parentId');
+            });
+            it('sets model as last in sequence', function(){
+                let changes = projectModelChangeSpy.calls[0].arguments[0];
+                expect(changes[1].value).toEqual(1);
+                expect(changes[1].propertyPath).toEqual('ui.sequence');
+            });
+        });
+        describe('previous sibling has NO children', function(){
+            it('sets model as only child', function(){
+                let currentParentId = cuid();
+                let siblingNode = {_id: cuid(), parentId: currentParentId, ui: {sequence: 0}};
+                let currentNode = {_id: cuid(), parentId: currentParentId, ui: {sequence: 1}};
+                let state = {
+                    treeNodesByParentId: {
+                        [currentParentId]: [currentNode, siblingNode]
+                    }
+                };
+                let getStateMock = ()=> state;
+                let projectModelChangeSpy = spyOn(modelActions, 'projectModelChanges').andReturn(()=>Promise.resolve(undefined));
+                treeNodeActions.makeChildOfPreviousSibling(currentNode)(()=>{}, getStateMock);
+                expect(projectModelChangeSpy).toHaveBeenCalled();
+                let changes = projectModelChangeSpy.calls[0].arguments[0];
+                expect(changes[0].value).toEqual(siblingNode._id);
+                expect(changes[0].propertyPath).toEqual('parentId');
+                expect(changes[1].value).toEqual(0);
+                expect(changes[1].propertyPath).toEqual('ui.sequence');
+            });
+        });
+    });
+
     describe('setAsNextSiblingOfModel', function(){
-        it('calls projectModelChange with the new parentId', function(){
-            throw new Error('not implemented');
-            let currentParentNode = {_id: cuid()};
-            let currentNode = {_id: cuid(), parentId: currentParentNode._id};
+        it('calls projectModelChange to change parent of moving model', function(done){
+            let siblingParentNode = {_id: cuid()};
+            let currentNode = {_id: cuid()};
+            let siblingNode = {_id: cuid(), parentId: siblingParentNode._id};
             let state = {
                 treeNodesByParentId: {
-                    [currentParentNode._id]: [currentNode]
+                    [siblingParentNode._id]: [siblingNode]
                 }
             };
-            let getStateSpy = ()=> state;
-            let dispatchSpy = createSpy();
+            let getStateMock = ()=> state;
+            let projectModelChangeSpy = spyOn(modelActions, 'projectModelChanges').andReturn(()=>Promise.resolve(undefined));
+            treeNodeActions.setAsNextSiblingOfModel(currentNode._id, siblingNode)(()=>{}, getStateMock).then(()=>{
+                expect(projectModelChangeSpy).toHaveBeenCalled();
+                let changes = projectModelChangeSpy.calls[0].arguments[0];
+                expect(changes[0].value).toEqual(siblingParentNode._id);
+                expect(changes[0].propertyPath).toEqual('parentId');
+                done();
+            }).catch(done);
         });
     });
     describe('makeNextSiblingOfParent', function(){
@@ -26,31 +171,42 @@ describe('treeNodeActions', () => {
                 let currentParentNode = {_id: cuid()}; // <= root node
                 let currentNode = {_id: cuid(), parentId: currentParentNode._id};
                 spyOn(modelActions, 'getCachedModel').andReturn(Promise.resolve(undefined));
-                let setAsNextSiblingOfModel = spyOn(treeNodeActions, 'setAsNextSiblingOfModel');
+                let projectModelChangeSpy = spyOn(modelActions, 'projectModelChanges').andReturn(()=>Promise.resolve(undefined));
                 treeNodeActions.makeNextSiblingOfParent(currentNode)(()=>{}, ()=>{}).then(()=>{
-                    expect(setAsNextSiblingOfModel).toNotHaveBeenCalled();
+                    expect(projectModelChangeSpy).toNotHaveBeenCalled();
                     done();
                 }).catch(done);
             });
         });
         describe('parent exists', function(){
-            it('makes model the next sibling of its parent', function(done){
-                let currentParentNode = {_id: cuid()};
+            it('calls projectModelChange to change parent of moving model', function(done){
+                let grandparentId = cuid();
+                let currentParentNode = {_id: cuid(), parentId: grandparentId};
                 let currentNode = {_id: cuid(), parentId: currentParentNode._id};
+                let state = {
+                    treeNodesByParentId: {
+                        [grandparentId]: [currentParentNode],
+                        [currentParentNode._id]: [currentNode]
+                    }
+                };
+                let getStateSpy = ()=> state;
                 spyOn(modelActions, 'getCachedModel').andReturn(Promise.resolve(currentParentNode));
-                let setAsNextSiblingOfModel = spyOn(treeNodeActions, 'setAsNextSiblingOfModel');
-                treeNodeActions.makeNextSiblingOfParent(currentNode)(()=>{}, ()=>{}).then(()=>{
-                    expect(setAsNextSiblingOfModel).toHaveBeenCalled();
+                let projectModelChangeSpy = spyOn(modelActions, 'projectModelChanges').andReturn(()=>Promise.resolve(undefined));
+                treeNodeActions.makeNextSiblingOfParent(currentNode)(()=>{}, getStateSpy).then(()=>{
+                    expect(projectModelChangeSpy).toHaveBeenCalled();
+                    let changes = projectModelChangeSpy.calls[0].arguments[0];
+                    expect(changes[0].value).toEqual(grandparentId);
+                    expect(changes[0].propertyPath).toEqual('parentId');
                     done();
                 }).catch(done);
             });
         });
     });
-    describe('getPreviousNodeInSequence', function(){
+    describe('getPreviousUncollapsedNodeInTree', function(){
         describe('previous sibling exists', function(){
             describe('prevous sibling has children', function(){
                 describe('children are expanded', function(){
-                    it('returns the last node in previous sibling\'s children', function(){
+                    it('returns the last node in previous sibling\'s children', function(done){
                         let parentId = cuid();
                         let currentModel = {_id: cuid(), ui: {sequence: 1}, parentId};
                         let previousModel = {_id: cuid(), ui: {sequence: 0, collapsed: false}, parentId};
@@ -62,12 +218,14 @@ describe('treeNodeActions', () => {
                                 [previousModel._id]: [lastChildModel, anotherChildModel]
                             }
                         };
-                        let result = treeNodeActions.getPreviousNodeInSequence(currentModel, state);
-                        expect(result).toBe(lastChildModel);
+                        treeNodeActions.getPreviousUncollapsedNodeInTree(currentModel, state, ()=>{}).then(result=>{
+                            expect(result).toBe(lastChildModel);
+                            done();
+                        }).catch(done);
                     });
                 });
                 describe('children are collapsed', function(){
-                    it('returns the previous sibling', function(){
+                    it('returns the previous sibling', function(done){
                         let parentId = cuid();
                         let currentModel = {_id: cuid(), ui: {sequence: 1}, parentId};
                         let previousModel = {_id: cuid(), ui: {sequence: 0, collapsed: true}, parentId};
@@ -79,13 +237,15 @@ describe('treeNodeActions', () => {
                                 [previousModel._id]: [lastChildModel, anotherChildModel]
                             }
                         };
-                        let result = treeNodeActions.getPreviousNodeInSequence(currentModel, state);
-                        expect(result).toBe(previousModel);
+                        treeNodeActions.getPreviousUncollapsedNodeInTree(currentModel, state, ()=>{}).then(result=>{
+                            expect(result).toBe(previousModel);
+                            done();
+                        }).catch(done);
                     });
                 });
             });
             describe('previous sibling has no children', function(){
-                it('returns the previous sibling', function(){
+                it('returns the previous sibling', function(done){
                     let parentId = cuid();
                     let currentModel = {_id: cuid(), ui: {sequence: 1}, parentId};
                     let previousModel = {_id: cuid(), ui: {sequence: 0}, parentId};
@@ -94,26 +254,51 @@ describe('treeNodeActions', () => {
                             [parentId]: [currentModel, previousModel]
                         }
                     };
-                    let result = treeNodeActions.getPreviousNodeInSequence(currentModel, state);
-                    expect(result).toBe(previousModel);
+                    treeNodeActions.getPreviousUncollapsedNodeInTree(currentModel, state, ()=>{}).then(result=>{
+                        expect(result).toBe(previousModel);
+                        done();
+                    }).catch(done);
                 });
             });
         });
         describe('previous sibling does not exist', function(){
-            it('returns undefined', function(){
-                let parentId = cuid();
-                let currentModel = {_id: cuid(), ui: {sequence: 1}, parentId};
-                let state = {
-                    treeNodesByParentId: {
-                        [parentId]: [currentModel]
-                    }
-                };
-                let result = treeNodeActions.getPreviousNodeInSequence(currentModel, state);
-                expect(result).toBe(undefined);
+            describe('parent exists', function(){
+                it('returns parent', function(done){
+
+                    let parentId = cuid();
+                    let parentNode = {_id: parentId};
+                    let currentModel = {_id: cuid(), ui: {sequence: 1}, parentId};
+                    let state = {
+                        treeNodesByParentId: {
+                            [parentId]: [currentModel]
+                        }
+                    };
+                    spyOn(modelActions, 'getCachedModel').andReturn(Promise.resolve(parentNode));
+                    treeNodeActions.getPreviousUncollapsedNodeInTree(currentModel, state, ()=>{}).then(result=>{
+                        expect(result).toBe(parentNode);
+                        done();
+                    }).catch(done);
+                });
+            });
+            describe('NO parent exists', function(){
+                it('returns undefined', function(done){
+                    let parentId = cuid();
+                    let currentModel = {_id: cuid(), ui: {sequence: 1}, parentId};
+                    let state = {
+                        treeNodesByParentId: {
+                            [parentId]: [currentModel]
+                        }
+                    };
+                    spyOn(modelActions, 'getCachedModel').andReturn(Promise.resolve());
+                    treeNodeActions.getPreviousUncollapsedNodeInTree(currentModel, state, ()=>{}).then(result=>{
+                        expect(result).toBe(undefined);
+                        done();
+                    }).catch(done);
+                });
             });
         });
     });
-    describe('getNextNodeInSequence', function(){
+    describe('getNextUncollapsedNodeInTree', function(){
         describe('current node has children', function(){
             describe('children are not collapsed', function(){
                 it('returns first child of current node', function(){
@@ -127,7 +312,7 @@ describe('treeNodeActions', () => {
                             [currentModel._id]: [firstChildModel]
                         }
                     };
-                    let result = treeNodeActions.getNextNodeInSequence(currentModel, state);
+                    let result = treeNodeActions.getNextUncollapsedNodeInTree(currentModel, state);
                     expect(result).toBe(firstChildModel);
                 });
             });
@@ -143,7 +328,7 @@ describe('treeNodeActions', () => {
                             [currentModel._id]: [firstChildModel]
                         }
                     };
-                    let result = treeNodeActions.getNextNodeInSequence(currentModel, state);
+                    let result = treeNodeActions.getNextUncollapsedNodeInTree(currentModel, state);
                     expect(result).toBe(nextModel);
                 });
             });
@@ -159,7 +344,7 @@ describe('treeNodeActions', () => {
                             [parentId]: [currentModel, nextModel]
                         }
                     };
-                    let result = treeNodeActions.getNextNodeInSequence(currentModel, state);
+                    let result = treeNodeActions.getNextUncollapsedNodeInTree(currentModel, state);
                     expect(result).toBe(nextModel);
                 });
             });
@@ -172,7 +357,7 @@ describe('treeNodeActions', () => {
                             [parentId]: [currentModel]
                         }
                     };
-                    let result = treeNodeActions.getNextNodeInSequence(currentModel, state);
+                    let result = treeNodeActions.getNextUncollapsedNodeInTree(currentModel, state);
                     expect(result).toBe(undefined);
                 });
             });
@@ -325,6 +510,91 @@ describe('treeNodeActions', () => {
                     });
                     treeNodeActions.tryAscendingCollapse(node1)(dispatchSpy, getStateSpy);
                     expect(projectModelChangeSpy).toHaveBeenCalled();
+                });
+            });
+        });
+    });
+    describe('mergeWithPreviousSibling', function(){
+        let projectModelChangeSpy, removeNodeSpy, rootId, node1, node2, node3, getStateSpy, dispatchSpy, state;
+        beforeEach(function(){
+            let dispatchFunction = createSpy();
+            removeNodeSpy = spyOn(modelActions, 'removeNode').andReturn(dispatchFunction);
+            projectModelChangeSpy = spyOn(modelActions, 'projectModelChange').andReturn(dispatchFunction);
+            rootId = cuid();
+            const node1Id = cuid();
+            node1 = { _id: node1Id, title: 'node1', ui: { collapsed: true, sequence: 0 } };
+            const node2Id = cuid();
+            node2 = { _id: node2Id, title: 'node2', ui: { collapsed: true, sequence: 1 } };
+            const node3Id = cuid();
+            node3 = { _id: node3Id, title: 'node3', ui: {} };
+            state = {
+                treeNodesByParentId: {
+                }
+            };
+            getStateSpy = createSpy().andReturn(state);
+            dispatchSpy = createSpy();
+        });
+        describe('previous sibling does not exist', function(){
+            it('does nothing', function(){
+                node1.parentId = rootId;
+                state.treeNodesByParentId[rootId] = [node1];
+                treeNodeActions.mergeWithPreviousSibling(node1)(dispatchSpy, getStateSpy);
+                expect(projectModelChangeSpy).toNotHaveBeenCalled();
+            });
+        });
+        describe('previous sibling exists', function(){
+            describe('previous sibling has children', function(){
+                it('does nothing', function(){
+                    node1.parentId = rootId;
+                    node2.parentId = rootId;
+                    node3.parentId = node1._id;
+                    state.treeNodesByParentId[rootId] = [node1, node2];
+                    state.treeNodesByParentId[node1._id] = [node3];
+                    treeNodeActions.mergeWithPreviousSibling(node2)(dispatchSpy, getStateSpy);
+                    expect(projectModelChangeSpy).toNotHaveBeenCalled();
+                });
+            });
+            describe('previous sibling does not having children', function(){
+                describe('merging model does not have children', function(){
+                    beforeEach(function(){
+                        node1.parentId = rootId;
+                        node2.parentId = rootId;
+                        state.treeNodesByParentId[rootId] = [node1, node2];
+                        treeNodeActions.mergeWithPreviousSibling(node2)(dispatchSpy, getStateSpy);
+                    });
+                    it('merging model text is merged into previous sibling text', function(){
+                        expect(projectModelChangeSpy).toHaveBeenCalled();
+                        let args = projectModelChangeSpy.calls[0].arguments;
+                        expect(args[0]).toEqual('node1node2');
+                        expect(args[1]).toEqual('title');
+                        expect(args[2]).toBe(node1);
+                    });
+                    it('merging model is deleted', function(){
+                        expect(removeNodeSpy).toHaveBeenCalledWith(node2);
+                    });
+                });
+                describe('merging model has children', function(){
+                    beforeEach(function(){
+                        node1.parentId = rootId;
+                        node2.parentId = rootId;
+                        node3.parentId = node2.parentId;
+                        state.treeNodesByParentId[rootId] = [node1, node2];
+                        state.treeNodesByParentId[node2._id] = [node3];
+                        treeNodeActions.mergeWithPreviousSibling(node2)(dispatchSpy, getStateSpy);
+                    });
+                    it('merging model text is merged into previous sibling text', function(){
+                        expect(projectModelChangeSpy).toHaveBeenCalled();
+                        let args = projectModelChangeSpy.calls[0].arguments;
+                        expect(args[0]).toEqual('node1node2');
+                        expect(args[1]).toEqual('title');
+                        expect(args[2]).toBe(node1);
+                    });
+                    it('merging model children are merged as children of previous sibling', function(){
+                        let args = projectModelChangeSpy.calls[1].arguments;
+                        expect(args[0]).toEqual(node1._id);
+                        expect(args[1]).toEqual('parentId');
+                        expect(args[2]).toBe(node3);
+                    });
                 });
             });
         });

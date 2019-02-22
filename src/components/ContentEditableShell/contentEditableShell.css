@@ -1,0 +1,18 @@
+.editable-text {
+    margin-right: .2em;
+    border: none;
+    color: white;
+    background-color: black;
+    font-size: medium;
+    cursor: text;
+    min-width: 3em;
+    padding: .2em;
+    border-radius: .25em;
+    outline-color: darkslategray;
+}
+.editable-text:hover {
+    background-color: darkslategray;
+}
+.editable-text:focus {
+    background-color: black;
+}

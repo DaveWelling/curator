@@ -15,11 +15,21 @@ export default function modelReducer(state=[], action) {
                 ...state,
                 [action.insert._id]: action.insert
             };
+        case 'remove_project_model_success':
+            return getStateWithoutModel(state, action.remove.model);
         default:
-            break;
+            return state;
     }
-    return state;
 }
+
+function getStateWithoutModel(state, model) {
+    let newState = {
+        ...state
+    };
+    delete newState[model._id];
+    return newState;
+}
+
 // export default function getModelReducer(initialProjectModelState) {
 //     return function ModelReducer(state={initialProjectModelState}, action){
 //         switch (action.type) {
