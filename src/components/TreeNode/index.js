@@ -44,6 +44,7 @@ export class TreeNode extends React.Component {
                                     })}
                                 </select>
                             </div>
+                            {treeNode._id}
                         </div>
                     }
                     collapsingChildren = {
@@ -74,7 +75,7 @@ TreeNode.propTypes = {
 };
 
 const mapStateToProps = (state, ownprops) => {
-    const childTreeNodes = get(state, `treeNodesByParentId.${ownprops.treeNode._id}`, []).sort((a, b) => a.ui.sequence - b.ui.sequence);
+    const childTreeNodes = get(state, `treeNodesByParentId.${ownprops.treeNode._id}`, []);
     return {
         childTreeNodes
     };

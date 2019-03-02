@@ -15,9 +15,9 @@ export default store => next => action => {
             // Get new model by merging changes with the existing one.
             let state = store.getState();
             let currentModelsInCurrentParent = state.treeNodesByParentId[oldModel.parentId];
-            let changingModelIndex = currentModelsInCurrentParent.findIndex(m=>m._id === oldModel._id);
             // Do not mutate state
             let newModelsInCurrentParent = [...currentModelsInCurrentParent];
+            let changingModelIndex = newModelsInCurrentParent.findIndex(m=>m._id === oldModel._id);
 
             // If the parent is changing
             if (newModel.parentId !== oldModel.parentId) {

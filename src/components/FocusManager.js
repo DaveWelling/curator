@@ -26,78 +26,41 @@ class FocusManager extends Component {
             isManagingFocus: false
         };
         this.setFocus = this.setFocus.bind(this);
+        this.focusRequested = this.focusRequested.bind(this);
         this.onBlur = this.onBlur.bind(this);
         this.onFocus = this.onFocus.bind(this);
-        this.setFocus = throttle(this.setFocus, 700, {leading: false, trailing:true });
+        this.setFocus = throttle(this.setFocus, 100, {leading: false, trailing:true });
         this.unsubscribes = [];
-        this.unsubscribes(subscribe('focus_project_model', this.focusRequested));
+        this.unsubscribes.push(subscribe('focus_tree_text', this.focusRequested));
     }
-
-    // componentDidUpdate(prevProps) {
-    //     // Do not bother messing with focus if none of the children have focus.
-    //     //if (!this.state.isManagingFocus) return;
-    //     const {
-    //         focusModel,
-    //         countOfTries,
-    //         focusShouldBeOnTreeNode
-    //     } = this.props;
-    //     if (get(this.props, 'focusModel.title', '') !== '') {
-    //         let diff = jsonDiff(prevProps, this.props, (path, key)=>{
-    //             return  (typeof key === 'string' && key.includes('_'));
-    //         });
-    //         if (diff) {
-    //             console.log('-begin--------------------------------------------------------------------');
-    //             console.log(diff);
-    //             console.log('-end--------------------------------------------------------------------');
-    //         }
-    //     }
-
-    //     if (
-    //         focusShouldBeOnTreeNode &&
-    //         focusModel
-    //     ) {
-    //         if (countOfTries > 7) {
-    //             console.error(
-    //                 `Something is weird.  Tried to focus on model ${countOfTries} times.  Model: ${JSON.stringify(
-    //                     focusModel
-    //                 )}`
-    //             );
-    //             return;
-    //         }
-    //         this.setFocus();
-    //     }
-    // }
 
     componentWillUnmount(){
         this.unsubscribes.forEach(u=>u());
     }
 
-    setFocus(){
+    focusRequested(actionPayload) {
+        const {modelId, countOfTries} = actionPayload;
+        const elementId = this.props.prefixForFocusableId + modelId;
+        this.setFocus(elementId, countOfTries);
+    }
+
+    setFocus(elementId, countOfTries = 0){
         const {
-            dispatch,
-            focusModel,
-            countOfTries,
-            prefixForFocusableId,
-            focusModel: { _id }
+            dispatch
         } = this.props;
-        const {setFocus} = this;
-        let element = document.querySelector(`#${prefixForFocusableId}${_id}`);
-        if (!element) {
+        let element = document.querySelector(`#${elementId}`);
+        if (!element || isHidden(element)) {
             console.log('here1');
-            dispatch(ensureVisible(focusModel));
-            dispatch(focusOnTreeNode(focusModel, countOfTries + 1));
-        } else {
-            if (isHidden(element)) {
-                console.log('here3');
-                dispatch(ensureVisible(focusModel));
-                dispatch(focusOnTreeNode(focusModel, countOfTries + 1));
-            } else if (document.activeElement !== element) {
-                console.log('here4');
-                element.focus();
-            }
-            //console.log('here5');
+            let modelId = elementId.substr(this.props.prefixForFocusableId.length);
+            dispatch(ensureVisible(modelId)).then(()=>{
+                // Use dispatch so that it will be run AFTER any
+                // dispatches caused by ensureVisible.
+                dispatch(focusOnTreeNode(modelId, countOfTries + 1));
+            });
+        } else if (document.activeElement !== element) {
+            console.log('here4');
+            element.focus();
         }
-        //console.log('here6');
     }
 
     onBlur() {
@@ -140,18 +103,7 @@ FocusManager.propTypes = {
     className: PropTypes.string
 };
 
-function mapStateToProps(state) {
-    const focusModel = get(state, 'focus.currentModel');
-    const focusShouldBeOnTreeNode = get(state, 'focus.onTreeNode', false);
-    const countOfTries = get(state, 'focus.countOfTries', 0);
-    return {
-        focusModel,
-        focusShouldBeOnTreeNode,
-        countOfTries
-    };
-}
-
-export default connect(mapStateToProps)(FocusManager);
+export default connect()(FocusManager);
 
 function isHidden(element) {
     return element.offsetParent === null;

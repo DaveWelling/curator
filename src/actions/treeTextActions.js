@@ -9,7 +9,7 @@ export function keyDown(keyCode, preventDefault, input, model, shiftKey) {
             case 13: // Enter Key
                 preventDefault();
                 focusOnTreeNode(
-                    createNewSibling()
+                    createNewSibling()._id
                 )(dispatch, getState);
                 break;
             case 38: // Arrow up
@@ -27,7 +27,7 @@ export function keyDown(keyCode, preventDefault, input, model, shiftKey) {
                 } else {
                     makeChildOfPreviousSibling(model)(dispatch, getState);
                 }
-                focusOnTreeNode(model)(dispatch, getState);
+                focusOnTreeNode(model._id)(dispatch, getState);
                 break;
         case 8: // Backspace
             if (input.selectionStart === 0) {

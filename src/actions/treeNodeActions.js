@@ -8,18 +8,26 @@ import get from 'lodash.get';
  * it will still attempt expand its children.
  * @param {object} model
  */
-export function ensureVisible(model) {
-    return (dispatch, getState) =>
-        projectModelActions.getCachedModel(model.parentId, getState(), dispatch).then(parent=>{
-            if (!parent) return;
-
-            // cycle to top before expanding
-            return ensureVisible(parent)(dispatch, getState).then(()=>{
-                if (get(parent, 'ui.collapsed', true)===true){
-                    return toggleCollapse(parent)(dispatch, getState);
-                }
+export function ensureVisible(modelOrId) {
+    return (dispatch, getState) => {
+        // If passing in just the ID, then look up the model first.
+        if (typeof modelOrId === 'string') {
+            return projectModelActions.getCachedModel(modelOrId, getState(), dispatch).then(model=>{
+                return ensureVisible(model);
             });
-        });
+        } else { // Otherwise we can start looking up the tree for collapsed nodes.
+            return projectModelActions.getCachedModel(modelOrId.parentId, getState(), dispatch).then(parent=>{
+                if (!parent) return;
+
+                // cycle to top before expanding
+                return ensureVisible(parent)(dispatch, getState).then(()=>{
+                    if (get(parent, 'ui.collapsed', true)===true){
+                        return toggleCollapse(parent)(dispatch, getState);
+                    }
+                });
+            });
+        }
+    };
 }
 
 export function toggleCollapse(treeNode) {
@@ -82,7 +90,7 @@ export function goToNext(treeNode) {
     return (dispatch, getState)=>{
         let nextNode = getNextUncollapsedNodeInTree(treeNode, getState());
         if (nextNode) {
-            return focusActions.focusOnTreeNode(nextNode)(dispatch, getState);
+            return focusActions.focusOnTreeNode(nextNode._id)(dispatch, getState);
         }
     };
 }
@@ -92,7 +100,7 @@ export function goToPrevious(treeNode) {
     return (dispatch, getState)=>
         getPreviousUncollapsedNodeInTree(treeNode, getState(), dispatch).then(previousNode=>{
             if (previousNode) {
-                return focusActions.focusOnTreeNode(previousNode)(dispatch, getState);
+                return focusActions.focusOnTreeNode(previousNode._id)(dispatch, getState);
             }
         });
 }
@@ -188,10 +196,6 @@ export function makeChildOfPreviousSibling(model) {
         let newSequence = 0;
         if (newSiblings.length > 0) {
             newSequence = get(newSiblings[newSiblings.length - 1], 'ui.sequence', 0) + 1;
-        }
-        // If you are moving a node, blur it, so the FocusManager component doesn't go bananas.
-        if (state.focus.currentModel._id === model._id) {
-            dispatch(focusActions.blurTreeNode(model));
         }
         return projectModelActions.projectModelChanges([{
             value: previousSibling._id,

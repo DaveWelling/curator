@@ -52,7 +52,8 @@ describe('projectModelsRepository', () => {
                 repository
                     .insert({
                         _id,
-                        title
+                        title,
+                        parentId: 0
                     })
                     .then(() => done())
                     .catch(done);
@@ -76,7 +77,8 @@ describe('projectModelsRepository', () => {
                 repository
                     .insert({
                         _id,
-                        title
+                        title,
+                        parentId: 0
                     })
                     .then(() => done())
                     .catch(done);
@@ -92,7 +94,6 @@ describe('projectModelsRepository', () => {
             });
         });
     });
-
     describe('update', function() {
         let _id, existingTitle = 'oldTitle', newTitle = 'newTitle';
         beforeEach(function(){
@@ -102,7 +103,8 @@ describe('projectModelsRepository', () => {
             beforeEach(() => {
                 return repository.insert({
                     _id,
-                    title: existingTitle
+                    title: existingTitle,
+                    parentId: 0
                 });
             });
             it('updates the existing model', function(done) {
@@ -253,7 +255,6 @@ describe('projectModelsRepository', () => {
             });
         });
     });
-
     describe('debounceById', function() {
         beforeEach(function(){
             repository.clearDebounceCache();

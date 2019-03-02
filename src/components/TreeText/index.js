@@ -3,13 +3,12 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { projectModelChange } from '../../actions/projectModelActions';
 import { keyDown } from '../../actions/treeTextActions';
-import { focusOnTreeNode, blurTreeNode } from '../../actions/focusActions';
 import ContentEditableShell from '../ContentEditableShell';
 import './treeText.css';
 
 export class TreeText extends Component {
     render() {
-        const { _id, title, onChange, onTitleKeystroke, onFocus, onBlur } = this.props;
+        const { _id, title, onChange, onTitleKeystroke} = this.props;
         if (_id === 'endingLookup') return null;
         return (
             <ContentEditableShell
@@ -20,8 +19,6 @@ export class TreeText extends Component {
                 value={title}
                 onKeyDown={onTitleKeystroke}
                 onChange={onChange}
-                // onFocus={onFocus}
-                // onBlur={onBlur}
             />
         );
     }
@@ -29,8 +26,6 @@ export class TreeText extends Component {
 
 function mapDispatchToProps(dispatch, ownProps) {
     return {
-        // onBlur: () => dispatch(blurTreeNode(ownProps.model)),
-        // onFocus: () => dispatch(focusOnTreeNode(ownProps.model)),
         onChange: e => dispatch(projectModelChange(e.target.value, 'title', ownProps.model)),
         onTitleKeystroke: e => {
             dispatch(

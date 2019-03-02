@@ -176,5 +176,8 @@ export function getNewSequenceAfterCurrentModel(currentModel, siblings) {
 
     let currentNextSibling = orderedSiblings[currentIndex + 1];
     let currentNextSiblingSequence = get(currentNextSibling, 'ui.sequence', currentModelSequence + 1);
+    if (currentModelSequence === currentNextSiblingSequence) {
+        throw new Error('The sequence for two siblings cannot be the same.');
+    }
     return (currentNextSiblingSequence - currentModelSequence) / 2 + currentModelSequence;
 }

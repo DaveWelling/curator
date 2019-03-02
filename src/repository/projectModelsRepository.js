@@ -31,23 +31,23 @@ function pouchDb() {
 
 export function getChildren(parentId) {
     // Index that does the actual sorting via map-reduce
-    const ddoc = {
-        _id: '_design/parentSort',
-        views: {
-            parentSort: {
-                map: `function mapFun(doc) {
-                        if (doc.parentId) {
-                            emit(doc.parentId);
-                        }
-                    }`
-            }
-        }
-    };
+    // const ddoc = {
+    //     _id: '_design/parentSort',
+    //     views: {
+    //         parentSort: {
+    //             map: `function mapFun(doc) {
+    //                     if (doc.parentId) {
+    //                         emit(doc.parentId);
+    //                     }
+    //                 }`
+    //         }
+    //     }
+    // };
     // Create the index - noop if it already exists.
     return pouchDb()
         .createIndex({
             index: {
-                fields: ['parentId']
+                fields: ['parentId', 'ui.sequence']
             }
         })
         .catch(function(err) {
@@ -60,7 +60,7 @@ export function getChildren(parentId) {
             pouchDb().find({
                 selector: {parentId},
                 fields: ['_id', 'title', 'type', 'parentId', 'ui'],
-                sort: ['parentId']
+                sort: ['parentId', 'ui.sequence']
             })
         )
         .then(result => {
@@ -73,7 +73,18 @@ export function getChildren(parentId) {
 }
 
 export function insert(model) {
-    return pouchDb().put(model);
+    if (typeof model.parentId === 'undefined') {
+        throw new Error('A parent ID is required to insert a model.');
+    }
+    // ensure ui sequence exists (necessary to allow index to work correctly)
+    let sequencedModel = {
+        ...model,
+        ui: {
+            sequence: 0,
+            ...model.sequence
+        }
+    };
+    return pouchDb().put(sequencedModel);
 }
 
 const debounce = require('debounce-promise');
@@ -127,37 +138,56 @@ export function remove(model) {
 
 function innerUpdate(accumulatedParams) {
     let expectedResultLength = accumulatedParams.length;
-    let _id = accumulatedParams[0][0]; // Should be the same _id for every call
-    // Reduce down the changes to a single hash.
-    let changes = accumulatedParams.reduce((accumulated, params) => [...accumulated, ...params[1]], []);
-    let result = pouchDb()
-        .get(_id)
-        .then(toChange => {
-            let newRecord = { ...toChange };
-            changes.forEach(change => {
-                set(newRecord, change.propertyPath, change.value);
+    // Create an array the same length as the number of calls so we can send the results back
+    // to the proper callers.
+    let toReturn = Array(expectedResultLength);
+    // Reduce the changes to one array per ID
+    let changesById = accumulatedParams.reduce((result, params, index) =>{
+        let id = params[0];
+        let change = params[1];
+
+        if (result[id]) {
+            result[id] = {changes: [...result[id].changes, ...change], originalIndexes: [...result[id].originalIndexes, index]};
+        } else {
+            result[id] = {changes: change, originalIndexes: [index]};
+        }
+
+        return result;
+    }, {});
+    //let changes = accumulatedParams.reduce((accumulated, params) => [...accumulated, ...params[1]], []);
+    Object.keys(changesById).forEach(_id => {
+        let changes = changesById[_id].changes;
+        let result = pouchDb()
+            .get(_id) // Get the current value to work off of
+            .then(oldDocument => {
+                // Create a new document, applying each change to the retrieved current value.
+                let newDocument = { ...oldDocument };
+                changes.forEach(change => {
+                    set(newDocument, change.propertyPath, change.value);
+                });
+
+                // Update the database with the resulting document
+                return pouchDb()
+                    .put(newDocument)
+                    .then(() => {
+                        return {
+                            oldModel: oldDocument,
+                            newModel: newDocument
+                        };
+                    });
+            })
+            .catch(error => {
+                if (error.status === 404) {
+                    throw new Error('An existing document was not found to update.');
+                }
+                throw error;
             });
 
-            return pouchDb()
-                .put(newRecord)
-                .then(() => {
-                    return {
-                        oldModel: toChange,
-                        newModel: newRecord
-                    };
-                });
-        })
-        .catch(error => {
-            if (error.status === 404) {
-                throw new Error('An existing document was not found to update.');
-            }
-            throw error;
+        // Sends the proper result promise to each caller of the debouncing function.
+        changesById[_id].originalIndexes.forEach(i=>{
+            toReturn[i] = result;
         });
-    // Sends the same result promise to every caller of the debouncing function.
-    let toReturn = [];
-    for (let index = 0; index < expectedResultLength; index++) {
-        toReturn.push(result);
-    }
+    });
     return toReturn;
 }
 
