@@ -73,6 +73,8 @@ export function getChildren(parentId) {
 }
 
 export function insert(model) {
+    // I'd rather have this type of thing in the action or middleware, but this
+    // prevents weird test problems where invalid data is created.
     if (typeof model.parentId === 'undefined') {
         throw new Error('A parent ID is required to insert a model.');
     }
@@ -81,7 +83,8 @@ export function insert(model) {
         ...model,
         ui: {
             sequence: 0,
-            ...model.sequence
+            collapsed: false,
+            ...model.ui
         }
     };
     return pouchDb().put(sequencedModel);
@@ -127,7 +130,7 @@ export function update(_id, changes) {
 }
 
 export function remove(model) {
-    return pouchDb().get(model._Id).then(toRemove=>{
+    return pouchDb().get(model._id).then(toRemove=>{
         return pouchDb().remove(toRemove);
     }).catch(error => {
         if (error.status !== 404) {

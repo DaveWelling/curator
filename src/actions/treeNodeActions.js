@@ -13,7 +13,7 @@ export function ensureVisible(modelOrId) {
         // If passing in just the ID, then look up the model first.
         if (typeof modelOrId === 'string') {
             return projectModelActions.getCachedModel(modelOrId, getState(), dispatch).then(model=>{
-                return ensureVisible(model);
+                return ensureVisible(model)(dispatch, getState);
             });
         } else { // Otherwise we can start looking up the tree for collapsed nodes.
             return projectModelActions.getCachedModel(modelOrId.parentId, getState(), dispatch).then(parent=>{

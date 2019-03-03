@@ -24,14 +24,17 @@ export function getChildrenByParentId(parentId) {
 }
 
 export function getModel(_id) {
+    if (typeof _id === 'undefined') throw new Error('_id not defined.');
     return dispatch => {
         return repository.getById(_id).then(model => {
-            dispatch({
-                type: 'load_project_model_success',
-                load: {
-                    ...model
-                }
-            });
+            if (typeof model !== 'undefined') {
+                dispatch({
+                    type: 'load_project_model_success',
+                    load: {
+                        ...model
+                    }
+                });
+            }
             return model;
         });
     };
@@ -93,7 +96,7 @@ export function projectModelChanges(changes, model) {
 
 export function createDefaultModel(rootParentId) {
     return dispatch => {
-        let defaultModel = { _id: cuid(), parentId: rootParentId, title: '', ui: { sequence: 0, collapsed: true } };
+        let defaultModel = { _id: cuid(), parentId: rootParentId, title: '', ui: { sequence: 0, collapsed: false } };
         return repository.insert(defaultModel).then(() => {
             dispatch({
                 type: 'insert_project_model_success',

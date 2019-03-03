@@ -10,14 +10,38 @@ describe('projectModelsRepository', () => {
             .catch(done);
     });
     describe('remove', function(){
+        let modelToRemove, existingTitle = 'test title';
+        beforeEach(function(){
+            modelToRemove = {
+                _id: cuid(),
+                title: existingTitle,
+                parentId: 0
+            };
+        });
         describe('model exists', function(){
-            it('is removed', function(){
-                throw new Error('not implemented');
+            beforeEach(() => {
+                return repository.insert(modelToRemove);
+            });
+            it('is removed', function(done){
+                repository.getById(modelToRemove._id).then(result => {
+                    expect(result.title).toEqual(existingTitle);
+                    return repository.remove(modelToRemove).then(()=>{
+                        return repository.getById(modelToRemove._id).then(result => {
+                            expect(result).toNotExist();
+                            done();
+                        });
+                    });
+                }).catch(done);
             });
         });
         describe('model does not exist', function(){
-            it('does nothing', function(){
-                throw new Error('not implemented');
+            it('does nothing', function(done){
+                repository.remove(modelToRemove).then(()=>{
+                    return repository.getById("some id that doesn't exist").then(result => {
+                        expect(result).toNotExist();
+                        done();
+                    });
+                }).catch(done);
             });
         });
     });

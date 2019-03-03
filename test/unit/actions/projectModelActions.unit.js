@@ -182,7 +182,7 @@ describe('projectModelActions', () => {
             insertSpy.andCall(model=>{
                 expect(model.parentId).toEqual(currentModel.parentId);
                 expect(model.ui.sequence).toEqual(1.5);
-                expect(model.parentId).toEqual(currentModel.parentId);
+                expect(model.title).toEqual('test');
                 return Promise.resolve();
             });
             createNextSiblingOfModel(currentModel._id, {
