@@ -218,7 +218,7 @@ ContentEditableShell.propTypes = {
 };
 
 
-
+debugger;
 if (window.getSelection && document.createRange) {
     getSelection = function(containerEl) {
         let winSelection = window.getSelection();

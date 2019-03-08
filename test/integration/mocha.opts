@@ -1,4 +1,5 @@
 --require ./test/babelHook
+--require ignore-styles
 --require ./test/setGlobal
 --require ./test/enzymeHook
 --require jsdom-global/register

@@ -95,7 +95,6 @@ export function goToNext(treeNode) {
     };
 }
 
-
 export function goToPrevious(treeNode) {
     return (dispatch, getState)=>
         getPreviousUncollapsedNodeInTree(treeNode, getState(), dispatch).then(previousNode=>{
@@ -206,8 +205,6 @@ export function makeChildOfPreviousSibling(model) {
         }], model)(dispatch, getState);
     };
 }
-
-
 
 export function setAsNextSiblingOfModel(modelIdMoving, destinationSiblingModel) {
     return (dispatch, getState) => {
