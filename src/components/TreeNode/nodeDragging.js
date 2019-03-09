@@ -27,7 +27,7 @@ export default function add(treeNode, dispatch) {
             onend: function() {
                 dispatch({
                     type: 'drag_project_model_end',
-                    drag: {
+                    payload: {
                         model: treeNode
                     }
                 });
@@ -35,7 +35,7 @@ export default function add(treeNode, dispatch) {
             onstart: function() {
                 dispatch({
                     type: 'drag_project_model_start',
-                    drag: {
+                    payload: {
                         model: treeNode
                     }
                 });

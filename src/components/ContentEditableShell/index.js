@@ -106,6 +106,7 @@ export default class ContentEditableShell extends React.Component {
     onKeyDown(e){
         this.selection= getSelection(this.domElementRef);
         let {value, selection: {selectionStart, selectionEnd}} = this;
+        debugger;
         e.persist(); // avoid losing synthetic event in asynchronous call below
         return this.props.onKeyDown({
             keyCode: e.keyCode,
@@ -218,7 +219,6 @@ ContentEditableShell.propTypes = {
 };
 
 
-debugger;
 if (window.getSelection && document.createRange) {
     getSelection = function(containerEl) {
         let winSelection = window.getSelection();
@@ -297,4 +297,9 @@ if (window.getSelection && document.createRange) {
         textRange.moveStart('character', savedSel.selectionStart);
         textRange.select();
     };
+} else {
+    // For testing without DOM window.getSelection (as in jsdom)
+    let selection;
+    getSelection = ()=>selection;
+    setSelection = (el, newSelection)=>{selection = newSelection;};
 }

@@ -13,7 +13,7 @@ export function getChildrenByParentId(parentId) {
         return repository.getChildren(parentId).then(children => {
             dispatch({
                 type: 'load_project_modelChildren_success',
-                load: {
+                payload: {
                     parentId,
                     models: children
                 }
@@ -30,7 +30,7 @@ export function getModel(_id) {
             if (typeof model !== 'undefined') {
                 dispatch({
                     type: 'load_project_model_success',
-                    load: {
+                    payload: {
                         ...model
                     }
                 });
@@ -68,22 +68,24 @@ export function projectModelChanges(changes, model) {
             });
             dispatch({
                 type: 'update_project_model',
-                update: {
+                payload: {
                     oldModel,
                     newModel
                 }
             });
 
             return repository.update(model._id, changes).then(result => {
+                debugger;
                 dispatch({
                     type: 'update_project_model_confirm',
-                    update: result
+                    payload: result
                 });
                 return result;
             }).catch(err=>{
+                debugger;
                 dispatch({
                     type: 'update_project_model_rollback',
-                    update: {
+                    payload: {
                         oldModel,
                         newModel,
                         err
@@ -100,7 +102,13 @@ export function createDefaultModel(rootParentId) {
         return repository.insert(defaultModel).then(() => {
             dispatch({
                 type: 'insert_project_model_success',
-                insert: {
+                payload: {
+                    ...defaultModel
+                }
+            });
+            dispatch({
+                type: 'insert_project_modelChildren_success',
+                payload: {
                     ...defaultModel
                 }
             });
@@ -121,9 +129,11 @@ export function createNextSiblingOfModel(modelId, nextSiblingModel) {
             return repository.insert(nextSiblingModel).then(() => {
                 dispatch({
                     type: 'insert_project_model_success',
-                    insert: {
-                        ...nextSiblingModel
-                    }
+                    payload: nextSiblingModel
+                });
+                dispatch({
+                    type: 'insert_project_modelChildren_success',
+                    payload: nextSiblingModel
                 });
                 return nextSiblingModel;
             });
@@ -135,13 +145,13 @@ export function removeNode(model) {
     return (dispatch, getState) => {
         dispatch({
             type: 'remove_project_model_success',
-            remove: {
+            payload: {
                 model
             }
         });
         dispatch({
             type:'remove_project_modelChildren_success',
-            remove: {
+            payload: {
                 model
             }
         });
@@ -149,7 +159,7 @@ export function removeNode(model) {
         return repository.remove(model).then(result => {
             dispatch({
                 type: 'update_project_model_confirm',
-                remove: {
+                payload: {
                     model,
                     result
                 }
@@ -158,7 +168,7 @@ export function removeNode(model) {
         }).catch(err=>{
             dispatch({
                 type: 'update_project_model_rollback',
-                remove: {
+                payload: {
                     model,
                     err
                 }

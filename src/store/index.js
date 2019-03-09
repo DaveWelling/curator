@@ -1,4 +1,3 @@
-
 import thunk from 'redux-thunk';
 import treeNodeReducer from '../reducers/treeNodeReducer';
 import { createStore, combineReducers, applyMiddleware, compose } from 'redux';
@@ -6,6 +5,7 @@ import projectConfigReducer from '../reducers/projectConfigReducer';
 import modelReducer from '../reducers/modelReducer';
 import eventSink from './eventSink';
 import treeNodeMiddleware from './treeNodeMiddleware';
+import persistenceMiddleware from './persistenceMiddleware';
 
 const appReducer = combineReducers({
     treeNodesByParentId: treeNodeReducer,
@@ -15,8 +15,10 @@ const appReducer = combineReducers({
 });
 
 const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
-const store = createStore(
-    appReducer,
-    composeEnhancers(applyMiddleware(thunk, treeNodeMiddleware, eventSink.eventSink))
-);
-export default store;
+export function createFreshStore() {
+    return createStore(
+        appReducer,
+        composeEnhancers(applyMiddleware(thunk, treeNodeMiddleware, persistenceMiddleware, eventSink.eventSink))
+    );
+}
+export default createFreshStore();

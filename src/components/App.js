@@ -53,7 +53,7 @@ class App extends Component {
                 onDragEnd: e =>
                     throttledPublish({
                         type: 'drag_split_end',
-                        drag: {
+                        payload: {
                             sizes: split.getSizes(),
                             leftSize: leftSide.clientWidth,
                             rightSize: rightSide.clientWidth

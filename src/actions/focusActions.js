@@ -3,7 +3,7 @@ export function focusOnTreeNode(modelId, countOfTries=0) {
         countOfTries++;
         dispatch({
             type: 'focus_tree_text',
-            focus: {
+            payload: {
                 modelId,
                 countOfTries
             }
@@ -14,7 +14,7 @@ export function focusOnTreeNode(modelId, countOfTries=0) {
 export function blurTreeNode(model) {
     return dispatch => dispatch({
         type: 'blur_project_model',
-        blur: {
+        payload: {
             model
         }
     });
@@ -23,7 +23,7 @@ export function blurTreeNode(model) {
 // export function focusOnWorkspace(model){
 //     return dispatch => dispatch({
 //         type: 'focus_project_model',
-//         focus: {
+//         payload: {
 //             model,
 //             onTreeNode: true
 //         }

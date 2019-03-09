@@ -65,9 +65,9 @@ describe('projectConfigActions', () => {
                 target(dispatchSpy)
                     .then(() => {
                         let action = dispatchSpy.calls[0].arguments[0];
-                        expect(action.load.loading).toBe(false);
-                        expect(action.load.title).toEqual('test');
-                        expect(action.load._id).toExist();
+                        expect(action.payload.loading).toBe(false);
+                        expect(action.payload.title).toEqual('test');
+                        expect(action.payload._id).toExist();
                         done();
                     })
                     .catch(done);
@@ -106,8 +106,8 @@ describe('projectConfigActions', () => {
         it('should dispatch update_project_config with the new title', () => {
             let action = dispatchSpy.calls[0].arguments[0];
             expect(action.type).toEqual('update_project_config_success');
-            expect(action.update.newConfig.title).toEqual('merged');
-            expect(action.update.newConfig._id).toEqual(projectConfig._id);
+            expect(action.payload.newConfig.title).toEqual('merged');
+            expect(action.payload.newConfig._id).toEqual(projectConfig._id);
         });
     });
     describe('insertProjectConfig', () => {
@@ -132,8 +132,8 @@ describe('projectConfigActions', () => {
         it('should dispatch insert_project_config_success with the config', () => {
             let action = dispatchSpy.calls[0].arguments[0];
             expect(action.type).toEqual('insert_project_config_success');
-            expect(action.insert.title).toEqual(projectConfig.title);
-            expect(action.insert._id).toEqual(projectConfig._id);
+            expect(action.payload.title).toEqual(projectConfig.title);
+            expect(action.payload._id).toEqual(projectConfig._id);
         });
     });
 });

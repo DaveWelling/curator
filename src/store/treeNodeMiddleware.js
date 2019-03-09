@@ -6,11 +6,8 @@ export default store => next => action => {
     }
     if (!action || !action.type || action.handled) return next(action);
 
-    if (action.type === 'insert_project_model_success') {
-        projectModelActions.getChildrenByParentId(action.insert.parentId)(store.dispatch);
-    }
     if (action.type === 'update_project_model') {
-        let {oldModel, newModel} = action.update;
+        let {oldModel, newModel} = action.payload;
         try {
             // Get new model by merging changes with the existing one.
             let state = store.getState();
@@ -25,7 +22,7 @@ export default store => next => action => {
                 newModelsInCurrentParent.splice(changingModelIndex, 1);
                 store.dispatch({
                     type: 'load_project_modelChildren_success',
-                    load: {
+                    payload: {
                         parentId: oldModel.parentId,
                         models: newModelsInCurrentParent
                     }
@@ -42,7 +39,7 @@ export default store => next => action => {
                 }
                 store.dispatch({
                     type: 'load_project_modelChildren_success',
-                    load: {
+                    payload: {
                         parentId: newModel.parentId,
                         models: newModelsInDestinationParent
                     }
@@ -54,7 +51,7 @@ export default store => next => action => {
                 // update model within existing parent
                 store.dispatch({
                     type: 'load_project_modelChildren_success',
-                    load: {
+                    payload: {
                         parentId: oldModel.parentId,
                         models: newModelsInCurrentParent
                     }
@@ -62,7 +59,7 @@ export default store => next => action => {
             }
             store.dispatch({
                 type: 'update_project_model_success',
-                update: {
+                payload: {
                     oldModel,
                     newModel
                 }
@@ -71,7 +68,7 @@ export default store => next => action => {
         catch(error) {
             store.dispatch({
                 type: 'update_project_model_failure',
-                update: {
+                payload: {
                     oldModel,
                     newModel,
                     error

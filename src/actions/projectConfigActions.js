@@ -17,7 +17,7 @@ export function projectConfigChange(title) {
             .then(result => {
                 dispatch({
                     type: 'update_project_config_success',
-                    update: {
+                    payload: {
                         newConfig: result
                     }
                 });
@@ -34,12 +34,12 @@ export function loadProjectConfig() {
                 return Promise.all([
                     insertProjectConfig(result)(dispatch),
                     projectModelActions.createDefaultModel(defaultConfig._id)(dispatch)
-                ]);
+                ]).then(result=>result[0]); // only return insert project config result
             } else {
                 result = result[0];
                 dispatch({
                     type: 'load_project_config_success',
-                    load: {
+                    payload: {
                         ...result,
                         loading: false
                     }
@@ -55,7 +55,7 @@ export function insertProjectConfig(projectConfig) {
         return projectConfigRepository.insert(projectConfig).then(() => {
             dispatch({
                 type: 'insert_project_config_success',
-                insert: {
+                payload: {
                     ...projectConfig
                 }
             });

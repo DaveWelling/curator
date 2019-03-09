@@ -33,8 +33,8 @@ describe('projectModelActions', () => {
                 c => c.arguments && c.arguments[0].type === 'load_project_modelChildren_success'
             );
             expect(successCall).toExist();
-            expect(successCall.arguments[0].load.models).toBe(expectedModels);
-            expect(successCall.arguments[0].load.parentId).toBe(parentId);
+            expect(successCall.arguments[0].payload.models).toBe(expectedModels);
+            expect(successCall.arguments[0].payload.parentId).toBe(parentId);
         });
     });
     describe('getModel', () => {
@@ -59,7 +59,7 @@ describe('projectModelActions', () => {
                 c => c.arguments && c.arguments[0].type === 'load_project_model_success'
             );
             expect(successCall).toExist();
-            expect(successCall.arguments[0].load._id).toBe(_id);
+            expect(successCall.arguments[0].payload._id).toBe(_id);
         });
     });
     describe('projectModelChange', function() {
@@ -108,8 +108,8 @@ describe('projectModelActions', () => {
                         c => c.arguments && c.arguments[0].type === 'update_project_model'
                     );
                     expect(successCall).toExist();
-                    expect(successCall.arguments[0].update.newModel._id).toBe(_id);
-                    expect(successCall.arguments[0].update.newModel.title).toBe(newTitle);
+                    expect(successCall.arguments[0].payload.newModel._id).toBe(_id);
+                    expect(successCall.arguments[0].payload.newModel.title).toBe(newTitle);
                     done();
                 })
                 .catch(done);
@@ -134,8 +134,8 @@ describe('projectModelActions', () => {
                 c => c.arguments && c.arguments[0].type === 'insert_project_model_success'
             );
             expect(successCall).toExist();
-            expect(successCall.arguments[0].insert.parentId).toBe(parentId);
-            expect(successCall.arguments[0].insert.title).toBe('');
+            expect(successCall.arguments[0].payload.parentId).toBe(parentId);
+            expect(successCall.arguments[0].payload.title).toBe('');
         });
     });
     describe('createNextSiblingOfModel', function() {

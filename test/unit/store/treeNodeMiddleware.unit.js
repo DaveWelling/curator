@@ -12,7 +12,7 @@ describe('treeNodeMiddleware', () => {
         it('calls getChildrenByParentId for the new model\'s parent', () => {
             let action = {
                 type: 'insert_project_model_success',
-                insert: {}
+                payload: {}
             };
             treeNodeMiddleware({})(()=>{})(action);
             expect(getChildrenByParentIdSpy).toHaveBeenCalled();
@@ -42,7 +42,7 @@ describe('treeNodeMiddleware', () => {
             it('dispatches a load_project_modelChildren_success with the change', function(){
                 let action = {
                     type: 'update_project_model',
-                    update: {
+                    payload: {
                         oldModel: startingModel,
                         newModel: {
                             ...startingModel,
@@ -54,7 +54,7 @@ describe('treeNodeMiddleware', () => {
                 expect(dispatchSpy).toHaveBeenCalled();
                 expect(dispatchSpy.calls.length).toEqual(2);
                 expect(dispatchSpy.calls[0].arguments[0].type).toEqual('load_project_modelChildren_success');
-                let newModels = dispatchSpy.calls[0].arguments[0].load.models;
+                let newModels = dispatchSpy.calls[0].arguments[0].payload.models;
                 expect(newModels.length).toEqual(1);
                 expect(newModels[0].title).toEqual('new title');
             });
@@ -64,7 +64,7 @@ describe('treeNodeMiddleware', () => {
             it('dispatches a load_project_modelChildren_success for both the new and old parentId', function(){
                 let action = {
                     type: 'update_project_model',
-                    update: {
+                    payload: {
                         oldModel: startingModel,
                         newModel: {
                             ...startingModel,
@@ -76,13 +76,13 @@ describe('treeNodeMiddleware', () => {
                 expect(dispatchSpy).toHaveBeenCalled();
                 expect(dispatchSpy.calls.length).toEqual(3);
                 expect(dispatchSpy.calls[0].arguments[0].type).toEqual('load_project_modelChildren_success');
-                expect(dispatchSpy.calls[0].arguments[0].load.parentId).toEqual(parentId);
-                let newSourceModels = dispatchSpy.calls[0].arguments[0].load.models;
+                expect(dispatchSpy.calls[0].arguments[0].payload.parentId).toEqual(parentId);
+                let newSourceModels = dispatchSpy.calls[0].arguments[0].payload.models;
                 expect(newSourceModels.length).toEqual(0);
 
                 expect(dispatchSpy.calls[1].arguments[0].type).toEqual('load_project_modelChildren_success');
-                expect(dispatchSpy.calls[1].arguments[0].load.parentId).toEqual(newParentId);
-                let newDestinationModels = dispatchSpy.calls[1].arguments[0].load.models;
+                expect(dispatchSpy.calls[1].arguments[0].payload.parentId).toEqual(newParentId);
+                let newDestinationModels = dispatchSpy.calls[1].arguments[0].payload.models;
                 expect(newDestinationModels.length).toEqual(1);
                 expect(newDestinationModels[0].parentId).toEqual(newParentId);
             });

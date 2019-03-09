@@ -49,6 +49,7 @@ export function keyDown(keyCode, preventDefault, input, model, shiftKey) {
                 _id: cuid(),
                 title: newSiblingValue
             };
+            debugger;
             createNextSiblingOfModel(model._id, newModel)(dispatch, getState);
             return newModel;
         }
