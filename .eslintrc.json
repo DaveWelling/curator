@@ -41,6 +41,8 @@
       2,
       "always"
     ],
+    "one-var-declaration-per-line": "off",
+    "one-var":"off",
     "space-before-blocks":"off",
     "arrow-parens": "off",
     "implicit-arrow-linebreak": "off",
