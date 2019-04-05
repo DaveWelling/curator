@@ -1,9 +1,14 @@
 import thunk from 'redux-thunk';
+import {
+    createStore,
+    combineReducers,
+    applyMiddleware,
+    compose
+} from 'redux';
 import treeNodeReducer from '../reducers/treeNodeReducer';
-import { createStore, combineReducers, applyMiddleware, compose } from 'redux';
 import projectConfigReducer from '../reducers/projectConfigReducer';
 import modelReducer from '../reducers/modelReducer';
-import eventSink from './eventSink';
+import { eventSink } from './eventSink';
 import treeNodeMiddleware from './treeNodeMiddleware';
 import persistenceMiddleware from './persistenceMiddleware';
 
@@ -18,7 +23,9 @@ const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 export function createFreshStore() {
     return createStore(
         appReducer,
-        composeEnhancers(applyMiddleware(thunk, treeNodeMiddleware, persistenceMiddleware, eventSink.eventSink))
+        composeEnhancers(
+            applyMiddleware(thunk, treeNodeMiddleware, persistenceMiddleware, eventSink)
+        )
     );
 }
 export default createFreshStore();

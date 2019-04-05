@@ -17,12 +17,12 @@ module.exports = {
         globalObject: 'this',
         chunkFilename: '[name].[hash].js'
     },
-    // You must get the absolute path here because of this issue: https://github.com/webpack/webpack/issues/1866
-    resolve: {
-        modules: ['../../node_modules/', 'node_modules'].map(moduleRelativePath =>
-            path.resolve(__dirname, moduleRelativePath)
-        )
-    },
+    // // You must get the absolute path here because of this issue: https://github.com/webpack/webpack/issues/1866
+    // resolve: {
+    //     modules: ['../../node_modules/', 'node_modules'].map(moduleRelativePath =>
+    //         path.resolve(__dirname, moduleRelativePath)
+    //     )
+    // },
     stats: {
         excludeModules: 'mini-css-extract-plugin'
     },
@@ -33,27 +33,23 @@ module.exports = {
         },
         port: 80,
         host: '0.0.0.0',
-        allowedHosts: [
-          'localhost',
-          'novel.davewelling.com'
-        ],
+        allowedHosts: ['localhost', 'novel.davewelling.com'],
         inline: true,
         hot: true
     },
     module: {
         rules: [
             {
-                test: /\.js$/,
+                test: /\.worker\.js$/,
                 use: {
-                    loader: 'babel-loader',
-                    options: {
-                        presets: ['@babel/env','@babel/react'],
-                        // You must get the absolute path here because of this issue: https://github.com/webpack/webpack/issues/1866
-                        // This means you need the whole module name: usually 'babel-plugin...name' instead of just 'name' as usual.
-                        plugins: [
-                            'react-hot-loader/babel'
-                        ]
-                    }
+                    loader: 'worker-loader'
+                }
+            },
+            {
+                test: /(\.worker)?\.js$/,
+                exclude: [/node_modules/],
+                use: {
+                    loader: 'babel-loader'
                 }
             },
             {
@@ -90,7 +86,7 @@ module.exports = {
         new WorkboxPlugin.GenerateSW(),
         new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/), // dropping locales makes moment WAY smaller.
         new webpack.DefinePlugin({
-            __PRODUCTION__: (process.env.NODE_ENV === 'production')
+            __PRODUCTION__: process.env.NODE_ENV === 'production'
         }),
         new HtmlWebPackPlugin({
             template: './src/index.html',

@@ -1,9 +1,8 @@
-import * as repository from '../../../src/repository/projectConfigRepository';
 import expect, { spyOn, createSpy, restoreSpies } from 'expect';
+import cuid from 'cuid';
 import * as testActions from '../../../src/actions/projectConfigActions';
 import * as projectModelActions from '../../../src/actions/projectModelActions';
-
-import cuid from 'cuid';
+import * as repository from '../../../src/repository/projectConfigRepository';
 
 describe('projectConfigActions', () => {
     let dispatchSpy;
@@ -11,6 +10,7 @@ describe('projectConfigActions', () => {
         dispatchSpy = createSpy();
     });
     afterEach(restoreSpies);
+
     describe('loadProjectConfig', () => {
         let loadProjectConfigSpy, target, result;
         let createDefaultModelSpy;
